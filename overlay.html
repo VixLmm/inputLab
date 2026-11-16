@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Overlay · InputLab</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Fundo transparente para a fonte de navegador do OBS */
+    html, body { background: transparent !important; min-height: 0; }
+    body { margin: 0; padding: 8px; font-family: system-ui, sans-serif; }
+    #historyList { max-width: 640px; margin: 8px 0 0; padding: 0; list-style: none; font-family: ui-monospace, monospace; color: #F2F4F8; text-shadow: 0 1px 2px #000; }
+    #historyList li { display: grid; grid-template-columns: 3rem 2rem 1fr; gap: .5rem; padding: .15rem .4rem; background: rgba(15,17,23,.7); margin-bottom: 2px; border-radius: 4px; }
+    #historyList .frames { text-align: right; color: #A0A7B8; }
+  </style>
+</head>
+<body>
+  <div id="padStage" style="max-width:720px"></div>
+  <ul id="historyList" aria-label="Histórico de inputs"></ul>
+  <script>window.InputLabUtil = { escapeHtml: function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); } };</script>
+  <script src="js/notation.js"></script>
+  <script src="js/pad.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/overlay.js"></script>
+</body>
+</html>

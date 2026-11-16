@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Visualize seus inputs de jogos de luta em tempo real, personalize o controle e gere um overlay para o OBS.">
+  <meta name="theme-color" content="#0F1117">
+  <title>Lab · InputLab</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body data-page="lab">
+
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+<div id="il-live" class="visually-hidden" aria-live="polite"></div>
+<header>
+  <nav class="navbar navbar-expand-lg il-navbar sticky-top" aria-label="Navegação principal">
+    <div class="container">
+      <a class="navbar-brand fs-4" href="index.html"><span class="brand-p1">Input</span>Lab</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Abrir menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto ms-lg-4">
+          <li class="nav-item"><a class="nav-link" data-page="inicio" href="index.html">Início</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="lab" href="lab.html">Lab</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="glossario" href="glossario.html">Glossário</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="contato" href="contato.html">Contato</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <button class="btn btn-il-ghost btn-sm" type="button" data-il-theme-toggle aria-pressed="true" aria-label="Mudar para modo claro"><i class="bi bi-sun-fill" aria-hidden="true"></i></button>
+          <button class="btn btn-il-ghost btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel"><i class="bi bi-universal-access" aria-hidden="true"></i> Acessibilidade</button>
+          <div id="navUser"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<main id="conteudo" tabindex="-1">
+
+<section class="py-4 py-lg-5">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+      <div>
+        <p class="il-kicker mb-1">Lab</p>
+        <h1 class="il-display h1 mb-0">Visualizador de inputs</h1>
+      </div>
+      <p class="mb-0 small" role="status"><span id="padStatus" class="il-status-dot me-1" aria-hidden="true"></span><span id="padStatusText">Nenhum controle — usando teclado (aperte um botão do controle para conectar)</span></p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="il-stage p-3 p-md-4 mb-4" id="stageBox">
+          <div id="padStage"></div>
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-2">
+            <div class="d-flex align-items-center gap-3">
+              <div class="il-numpad" id="liveNumpad" aria-hidden="true">
+                <span>7</span><span>8</span><span>9</span><span>4</span><span>5</span><span>6</span><span>1</span><span>2</span><span>3</span>
+              </div>
+              <div>
+                <p class="small text-muted mb-1">Último especial</p>
+                <p class="il-motion-toast mb-0" id="motionOut"></p>
+                <p class="visually-hidden" aria-live="polite" id="motionLive"></p>
+              </div>
+            </div>
+            <p class="small text-muted mb-0"><i class="bi bi-keyboard" aria-hidden="true"></i> Teclado: <span class="il-kbd">WASD</span> direções · <span class="il-kbd">U I O P</span> fileira de cima · <span class="il-kbd">J K L Ç</span> fileira de baixo</p>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-7" id="historyCard">
+            <div class="il-card p-3 h-100">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 fw-bold mb-0">Histórico <span class="text-muted fw-normal">(frames · direção · botões)</span></h2>
+                <button class="btn btn-il-ghost btn-sm" id="btnClearHistory" type="button">Limpar</button>
+              </div>
+              <ul class="list-unstyled il-history mb-0" id="historyList" aria-label="Histórico de inputs"></ul>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="il-card p-3 h-100">
+              <h2 class="h6 fw-bold">Especiais reconhecidos</h2>
+              <ul class="list-unstyled d-grid gap-2 mb-2"><li class="d-flex justify-content-between"><span class="il-kbd">236</span><span id="counter-236" class="fw-bold">0</span></li><li class="d-flex justify-content-between"><span class="il-kbd">214</span><span id="counter-214" class="fw-bold">0</span></li><li class="d-flex justify-content-between"><span class="il-kbd">623</span><span id="counter-623" class="fw-bold">0</span></li><li class="d-flex justify-content-between"><span class="il-kbd">421</span><span id="counter-421" class="fw-bold">0</span></li><li class="d-flex justify-content-between"><span class="il-kbd">41236</span><span id="counter-41236" class="fw-bold">0</span></li><li class="d-flex justify-content-between"><span class="il-kbd">63214</span><span id="counter-63214" class="fw-bold">0</span></li><li class="d-flex justify-content-between"><span class="il-kbd">632146</span><span id="counter-632146" class="fw-bold">0</span></li><li class="d-flex justify-content-between"><span class="il-kbd">22</span><span id="counter-22" class="fw-bold">0</span></li></ul>
+              <p class="small text-muted mb-0">Faça o movimento e aperte um ataque em até 450 ms.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <form class="il-card p-4 mb-4" id="configForm" aria-labelledby="cfgTitle" novalidate onsubmit="return false">
+          <h2 class="h5 fw-bold" id="cfgTitle"><i class="bi bi-sliders il-p2" aria-hidden="true"></i> Personalizar</h2>
+          <div class="row g-3 mb-3">
+            <div class="col-7">
+              <label class="form-label" for="cfgLayout">Tipo de controle</label>
+              <select class="form-select" id="cfgLayout">
+                <option value="stick">Arcade stick</option>
+                <option value="leverless">Leverless / Hitbox</option>
+                <option value="pad">Controle (pad)</option>
+              </select>
+            </div>
+            <div class="col-5" id="padStyleBox">
+              <label class="form-label" for="cfgPadStyle">Modelo</label>
+              <select class="form-select" id="cfgPadStyle">
+                <option value="xbox">Estilo Xbox</option>
+                <option value="ps">Estilo PlayStation</option>
+              </select>
+            </div>
+          </div>
+          <label class="form-label" for="cfgPreset">Preset de jogo</label>
+          <div class="input-group mb-1">
+            <select class="form-select" id="cfgPreset" aria-describedby="presetHelp"></select>
+            <button class="btn btn-il-p2" type="button" id="btnApplyPreset">Aplicar</button>
+          </div>
+          <p class="form-text text-muted small mb-3" id="presetHelp">Substitui rótulos, cores e posições dos botões nos três tipos de controle.</p>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="cfgNotation">Notação</label>
+              <select class="form-select" id="cfgNotation"><option value="numpad">Numpad</option><option value="arrows">Setas</option></select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="cfgSide">Lado</label>
+              <select class="form-select" id="cfgSide"><option value="p1">P1 →</option><option value="p2">P2 ←</option></select>
+            </div>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="cfgHistory">
+            <label class="form-check-label" for="cfgHistory">Mostrar histórico</label>
+          </div>
+
+          <fieldset>
+            <legend class="form-label fs-6 d-flex justify-content-between align-items-center w-100">
+              <span>Botões (<span id="buttonCount">8</span>)</span>
+            </legend>
+            <div class="form-check form-switch mb-2" id="editModeBox">
+              <input class="form-check-input" type="checkbox" role="switch" id="cfgEditMode">
+              <label class="form-check-label" for="cfgEditMode">Editar posições (arrastar no desenho)</label>
+            </div>
+            <p class="small text-muted mb-1">Cor · rótulo · mapeamento (clique para remapear) · posição · remover</p>
+            <ul class="list-unstyled mb-2" id="buttonList" aria-label="Botões do controle"></ul>
+            <p class="small il-gold mb-2" id="remapHint" role="status" hidden></p>
+
+            <div class="il-card p-3 mb-3" id="selectedEditor" hidden>
+              <p class="fw-bold small mb-2">Posição de <span id="selName"></span></p>
+              <div class="row g-2">
+                <div class="col-4"><label class="form-label small" for="selX">X</label><input type="number" class="form-control form-control-sm" id="selX" min="30" max="690" step="2"></div>
+                <div class="col-4"><label class="form-label small" for="selY">Y</label><input type="number" class="form-control form-control-sm" id="selY" min="30" max="330" step="2"></div>
+                <div class="col-4" id="selSizeBox"><label class="form-label small" for="selR">Tamanho</label><input type="number" class="form-control form-control-sm" id="selR" min="18" max="44"></div>
+              </div>
+              <p class="small mt-2 mb-0" id="selContrast" aria-live="polite"></p>
+            </div>
+
+            <button class="btn btn-il-ghost btn-sm w-100" type="button" id="btnAddButton"><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar botão</button>
+            <p class="small text-muted mb-0" id="padAddNote" hidden><i class="bi bi-info-circle" aria-hidden="true"></i> No pad, os botões seguem o controle físico. Deixe o rótulo vazio para marcar um botão como “sem uso”.</p>
+          </fieldset>
+          <button class="btn btn-il-ghost btn-sm mt-3" type="button" id="btnReset"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restaurar padrão</button>
+        </form>
+
+        <section class="il-card p-4 mb-4" aria-labelledby="presetTitle">
+          <h2 class="h5 fw-bold" id="presetTitle"><i class="bi bi-bookmark-star il-gold" aria-hidden="true"></i> Meus presets</h2>
+          <p class="text-muted small mb-0" id="presetLoginHint"><a href="login.html">Entre na sua conta</a> para salvar presets. Sem conta, sua última configuração continua salva neste navegador.</p>
+          <div id="presetSaveBox" hidden>
+            <form class="d-flex gap-2 mb-3" id="presetForm" novalidate>
+              <label class="visually-hidden" for="presetName">Nome do preset</label>
+              <input class="form-control form-control-sm" id="presetName" placeholder="Ex.: SF6 no stick" maxlength="30" required>
+              <button class="btn btn-il-p2 btn-sm" type="submit">Salvar</button>
+            </form>
+            <ul class="list-group list-group-flush" id="presetList"></ul>
+          </div>
+        </section>
+
+        <section class="il-card p-4" id="overlay" aria-labelledby="overlayTitle">
+          <h2 class="h5 fw-bold" id="overlayTitle"><i class="bi bi-broadcast il-p1" aria-hidden="true"></i> Overlay para OBS</h2>
+          <label class="form-label small" for="overlayUrl">Link com sua configuração atual</label>
+          <div class="input-group input-group-sm mb-2">
+            <input class="form-control" id="overlayUrl" readonly>
+            <button class="btn btn-il-p1" type="button" id="btnCopyOverlay"><i class="bi bi-clipboard" aria-hidden="true"></i> Copiar</button>
+          </div>
+          <p class="small text-muted mb-2">No OBS: <em>Fontes → + → Navegador</em>, cole o link, largura 720 e altura 560.</p>
+          <div class="alert alert-warning small mb-0" role="note"><strong>Limitação conhecida:</strong> por segurança, navegadores (e o OBS 31+) só entregam inputs do controle para a janela em foco. Enquanto o jogo estiver em foco, o overlay pode parar de atualizar. Use-o para gravar tutoriais com o Lab em foco, ou veja as alternativas no README.</div>
+        </section>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="il-footer mt-5 pt-5 pb-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <p class="fs-4 fw-bold mb-2"><span class="il-p1">Input</span>Lab</p>
+        <p class="text-muted">Personalize seu controle, veja seus inputs em notação de jogos de luta e treine sua execução.</p>
+      </div>
+      <div class="col-6 col-md-2">
+        <h2 class="h6 fw-bold">Site</h2>
+        <ul class="list-unstyled">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="lab.html">Lab</a></li>
+          <li><a href="glossario.html">Glossário</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-3">
+        <h2 class="h6 fw-bold">Recursos</h2>
+        <ul class="list-unstyled">
+          <li><a href="lab.html#overlay">Overlay para OBS</a></li>
+          <li><a href="login.html">Entrar / Criar conta</a></li>
+          <li><a href="contato.html#acessibilidade">Declaração de acessibilidade</a></li>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h2 class="h6 fw-bold">Projeto</h2>
+        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
+        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+      </div>
+    </div>
+    <hr class="my-4">
+    <p class="text-muted small mb-0">© <span id="year">2026</span> InputLab. Projeto acadêmico sem fins lucrativos. Nomes de jogos citados pertencem aos seus donos.</p>
+  </div>
+</footer>
+
+<button class="btn btn-il-p2 il-a11y-fab" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel" aria-label="Abrir opções de acessibilidade" title="Acessibilidade">
+  <i class="bi bi-universal-access" aria-hidden="true"></i>
+</button>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="mb-4">
+      <label for="a11yTheme" class="form-label">Tema</label>
+      <select id="a11yTheme" class="form-select">
+        <option value="auto">Automático (segue o sistema)</option>
+        <option value="dark">Escuro</option>
+        <option value="light">Claro</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <span class="form-label d-block" id="fontLabel">Tamanho do texto</span>
+      <div class="btn-group" role="group" aria-labelledby="fontLabel">
+        <button class="btn btn-il-ghost" id="a11yFontDown" type="button" aria-label="Diminuir texto">A−</button>
+        <span class="btn btn-il-ghost disabled" id="a11yFontValue" aria-live="polite">100%</span>
+        <button class="btn btn-il-ghost" id="a11yFontUp" type="button" aria-label="Aumentar texto">A+</button>
+      </div>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yContrast">
+      <label class="form-check-label" for="a11yContrast">Alto contraste</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yMotion">
+      <label class="form-check-label" for="a11yMotion">Reduzir animações (pausa o carrossel)</label>
+    </div>
+    <div class="form-check form-switch mb-4">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yLinks">
+      <label class="form-check-label" for="a11yLinks">Sublinhar todos os links</label>
+    </div>
+    <button class="btn btn-il-ghost w-100" id="a11yReset" type="button"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restaurar padrão</button>
+    <p class="small text-muted mt-4 mb-0">As preferências ficam salvas neste navegador. Atalho: <span class="il-kbd">Tab</span> navega, <span class="il-kbd">Esc</span> fecha este painel.</p>
+  </div>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/notation.js"></script>
+<script src="js/pad.js"></script>
+<script src="js/gallery.js"></script>
+<script src="js/lab.js"></script>
+</body>
+</html>

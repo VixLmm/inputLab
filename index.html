@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="InputLab: visualize e treine seus inputs de jogos de luta em notação numpad.">
+  <meta name="theme-color" content="#0F1117">
+  <title>Início · InputLab</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body data-page="inicio">
+
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+<div id="il-live" class="visually-hidden" aria-live="polite"></div>
+<header>
+  <nav class="navbar navbar-expand-lg il-navbar sticky-top" aria-label="Navegação principal">
+    <div class="container">
+      <a class="navbar-brand fs-4" href="index.html"><span class="brand-p1">Input</span>Lab</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Abrir menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto ms-lg-4">
+          <li class="nav-item"><a class="nav-link" data-page="inicio" href="index.html">Início</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="lab" href="lab.html">Lab</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="glossario" href="glossario.html">Glossário</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="contato" href="contato.html">Contato</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <button class="btn btn-il-ghost btn-sm" type="button" data-il-theme-toggle aria-pressed="true" aria-label="Mudar para modo claro"><i class="bi bi-sun-fill" aria-hidden="true"></i></button>
+          <button class="btn btn-il-ghost btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel"><i class="bi bi-universal-access" aria-hidden="true"></i> Acessibilidade</button>
+          <div id="navUser"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<main id="conteudo" tabindex="-1">
+
+<section class="il-hero py-5">
+  <div class="container py-lg-5">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <p class="il-kicker mb-3">Para quem joga jogos de luta</p>
+        <h1 class="il-display display-3 mb-4">Veja cada <span class="il-p1">input</span>.<br>Treine cada <span class="il-p2">movimento</span>.</h1>
+        <p class="lead text-muted mb-4">O InputLab mostra em tempo real o que você aperta no controle, arcade stick ou leverless, em notação numpad — a mesma usada pela comunidade. Personalize as cores, salve seus presets e leve o visual para a sua stream.</p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="lab.html" class="btn btn-il-p1 btn-lg px-4"><i class="bi bi-controller" aria-hidden="true"></i> Abrir o Lab</a>
+          <a href="glossario.html" class="btn btn-il-ghost btn-lg px-4">Aprender a notação</a>
+        </div>
+        <p class="small text-muted mt-3 mb-0"><i class="bi bi-keyboard" aria-hidden="true"></i> Sem controle? Use <span class="il-kbd">W</span><span class="il-kbd">A</span><span class="il-kbd">S</span><span class="il-kbd">D</span> e <span class="il-kbd">U</span><span class="il-kbd">I</span><span class="il-kbd">O</span><span class="il-kbd">P</span> / <span class="il-kbd">J</span><span class="il-kbd">K</span><span class="il-kbd">L</span><span class="il-kbd">Ç</span>.</p>
+      </div>
+      <div class="col-lg-6">
+        <div class="il-card p-4 p-md-5 text-center">
+          <p class="il-kicker mb-3">Como ler a notação</p>
+          <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
+            <div class="il-numpad" aria-label="Teclado numérico de direções">
+              <span>7</span><span>8</span><span>9</span>
+              <span>4</span><span>5</span><span class="on">6</span>
+              <span>1</span><span class="on">2</span><span class="on">3</span>
+            </div>
+            <div class="text-start">
+              <p class="display-6 fw-bold mb-1"><span class="il-gold">236</span><span class="il-p2">P</span></p>
+              <p class="text-muted mb-0">baixo → baixo-frente → frente<br>+ soco</p>
+            </div>
+          </div>
+          <p class="small text-muted mt-4 mb-0">O 5 é o neutro. Imagine o teclado numérico com seu personagem olhando para a direita.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5" aria-labelledby="recursosTitulo">
+  <div class="container">
+    <p class="il-kicker mb-2">Recursos</p>
+    <h2 id="recursosTitulo" class="il-display h1 mb-4">Tudo que você precisa para treinar</h2>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
+        <div class="il-icon il-p1 mb-3"><i class="bi bi-activity" aria-hidden="true"></i></div>
+        <h3 class="h5 fw-bold">Inputs ao vivo</h3>
+        <p class="text-muted mb-0">Lê controle via Gamepad API ou teclado e mostra cada direção e botão no mesmo instante.</p>
+      </article></div>
+      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
+        <div class="il-icon il-p2 mb-3"><i class="bi bi-list-ol" aria-hidden="true"></i></div>
+        <h3 class="h5 fw-bold">Histórico com frames</h3>
+        <p class="text-muted mb-0">Igual ao modo treino dos jogos: quanto tempo (em frames) você segurou cada input.</p>
+      </article></div>
+      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
+        <div class="il-icon il-gold mb-3"><i class="bi bi-stars" aria-hidden="true"></i></div>
+        <h3 class="h5 fw-bold">Detecção de especiais</h3>
+        <p class="text-muted mb-0">Reconhece 236, 214, 623, 41236 e outros, e conta quantas vezes você acertou cada um.</p>
+      </article></div>
+      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
+        <div class="il-icon il-p1 mb-3"><i class="bi bi-broadcast" aria-hidden="true"></i></div>
+        <h3 class="h5 fw-bold">Overlay para OBS</h3>
+        <p class="text-muted mb-0">Gera um link com fundo transparente para usar como fonte de navegador na sua stream.</p>
+      </article></div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5" aria-labelledby="skinsTitulo">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-5">
+        <p class="il-kicker mb-2">Galeria</p>
+        <h2 id="skinsTitulo" class="il-display h1 mb-3">Escolha um ponto de partida</h2>
+        <p class="text-muted">Skins prontas para arcade stick, leverless e controle. Abra no Lab e mude a cor de cada botão, adicione botões, arraste para o seu layout ou aplique o preset do seu jogo.</p>
+        <p class="text-muted small"><i class="bi bi-pause-circle" aria-hidden="true"></i> O carrossel pausa quando você passa o mouse, foca com o teclado ou ativa “Reduzir animações”.</p>
+      </div>
+      <div class="col-lg-7">
+        <div id="skinCarousel" class="carousel slide il-carousel" data-bs-ride="carousel" data-bs-interval="6000" aria-roledescription="carrossel" aria-label="Skins de controle">
+          <div class="carousel-inner">
+            <div class="carousel-item active" aria-roledescription="slide" aria-label="1 de 4">
+              <img src="img/skin-arcade.png" alt="Arcade stick de 8 botões com alavanca vermelha, socos em azul, chutes em vermelho e botões macro em dourado" loading="lazy">
+              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Arcade Clássico</h3><p class="text-muted mb-2">8 botões no padrão Vewlix, com as cores P1 vermelho e P2 azul.</p><a href="lab.html?preset=arcade" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
+            </div>
+            <div class="carousel-item" aria-roledescription="slide" aria-label="2 de 4">
+              <img src="img/skin-torneio.png" alt="Controle leverless com direções em botões e 8 botões no layout de Street Fighter 6" loading="lazy">
+              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Leverless SF6</h3><p class="text-muted mb-2">Direções em botões e preset de Street Fighter 6, com Drive Impact e Parry.</p><a href="lab.html?preset=torneio" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
+            </div>
+            <div class="carousel-item" aria-roledescription="slide" aria-label="3 de 4">
+              <img src="img/skin-neon.png" alt="Desenho de controle estilo Xbox com gatilhos, dois analógicos, direcional e botões em ciano e rosa" loading="lazy">
+              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Pad Neon</h3><p class="text-muted mb-2">Controle desenhado como o de verdade: gatilhos, bumpers e dois analógicos.</p><a href="lab.html?preset=neon" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
+            </div>
+            <div class="carousel-item" aria-roledescription="slide" aria-label="4 de 4">
+              <img src="img/skin-mono.png" alt="Arcade stick em tons de cinza" loading="lazy">
+              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Monocromático</h3><p class="text-muted mb-2">Discreto, para não competir com o jogo na stream.</p><a href="lab.html?preset=mono" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
+            </div>
+          </div>
+          <div class="carousel-indicators">
+            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Skin 1"></button>
+            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="1" aria-label="Skin 2"></button>
+            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="2" aria-label="Skin 3"></button>
+            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="3" aria-label="Skin 4"></button>
+          </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#skinCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span></button>
+          <button class="carousel-control-next" type="button" data-bs-target="#skinCarousel" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próxima</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5" aria-labelledby="comoTitulo">
+  <div class="container">
+    <p class="il-kicker mb-2">Passo a passo</p>
+    <h2 id="comoTitulo" class="il-display h1 mb-4">Como funciona</h2>
+    <div class="row g-4">
+      <div class="col-md-4"><article class="il-card h-100 p-4">
+        <p class="display-5 fw-bold il-p1 mb-2">1</p>
+        <h3 class="h5 fw-bold">Conecte</h3>
+        <p class="text-muted mb-0">Plugue o controle e aperte qualquer botão — por privacidade, o navegador só revela o controle depois do primeiro aperto. Ou use o teclado.</p>
+      </article></div>
+      <div class="col-md-4"><article class="il-card h-100 p-4">
+        <p class="display-5 fw-bold il-p2 mb-2">2</p>
+        <h3 class="h5 fw-bold">Personalize</h3>
+        <p class="text-muted mb-0">Aplique o preset do seu jogo, mude a cor de cada botão, adicione botões e arraste para reproduzir o seu controle.</p>
+      </article></div>
+      <div class="col-md-4"><article class="il-card h-100 p-4">
+        <p class="display-5 fw-bold il-gold mb-2">3</p>
+        <h3 class="h5 fw-bold">Treine e mostre</h3>
+        <p class="text-muted mb-0">Acompanhe o histórico, veja seus especiais sendo reconhecidos e copie o link do overlay para o OBS.</p>
+      </article></div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="il-card p-4 p-md-5 d-md-flex align-items-center justify-content-between gap-4">
+      <div>
+        <h2 class="il-display h2 mb-2">Salve seus presets</h2>
+        <p class="text-muted mb-md-0">Crie uma conta para guardar quantas configurações quiser — uma para cada jogo ou controle.</p>
+      </div>
+      <a href="login.html#cadastro" class="btn btn-il-p2 btn-lg px-4 flex-shrink-0">Criar conta grátis</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="il-footer mt-5 pt-5 pb-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <p class="fs-4 fw-bold mb-2"><span class="il-p1">Input</span>Lab</p>
+        <p class="text-muted">Personalize seu controle, veja seus inputs em notação de jogos de luta e treine sua execução.</p>
+      </div>
+      <div class="col-6 col-md-2">
+        <h2 class="h6 fw-bold">Site</h2>
+        <ul class="list-unstyled">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="lab.html">Lab</a></li>
+          <li><a href="glossario.html">Glossário</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-3">
+        <h2 class="h6 fw-bold">Recursos</h2>
+        <ul class="list-unstyled">
+          <li><a href="lab.html#overlay">Overlay para OBS</a></li>
+          <li><a href="login.html">Entrar / Criar conta</a></li>
+          <li><a href="contato.html#acessibilidade">Declaração de acessibilidade</a></li>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h2 class="h6 fw-bold">Projeto</h2>
+        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
+        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+      </div>
+    </div>
+    <hr class="my-4">
+    <p class="text-muted small mb-0">© <span id="year">2026</span> InputLab. Projeto acadêmico sem fins lucrativos. Nomes de jogos citados pertencem aos seus donos.</p>
+  </div>
+</footer>
+
+<button class="btn btn-il-p2 il-a11y-fab" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel" aria-label="Abrir opções de acessibilidade" title="Acessibilidade">
+  <i class="bi bi-universal-access" aria-hidden="true"></i>
+</button>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="mb-4">
+      <label for="a11yTheme" class="form-label">Tema</label>
+      <select id="a11yTheme" class="form-select">
+        <option value="auto">Automático (segue o sistema)</option>
+        <option value="dark">Escuro</option>
+        <option value="light">Claro</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <span class="form-label d-block" id="fontLabel">Tamanho do texto</span>
+      <div class="btn-group" role="group" aria-labelledby="fontLabel">
+        <button class="btn btn-il-ghost" id="a11yFontDown" type="button" aria-label="Diminuir texto">A−</button>
+        <span class="btn btn-il-ghost disabled" id="a11yFontValue" aria-live="polite">100%</span>
+        <button class="btn btn-il-ghost" id="a11yFontUp" type="button" aria-label="Aumentar texto">A+</button>
+      </div>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yContrast">
+      <label class="form-check-label" for="a11yContrast">Alto contraste</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yMotion">
+      <label class="form-check-label" for="a11yMotion">Reduzir animações (pausa o carrossel)</label>
+    </div>
+    <div class="form-check form-switch mb-4">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yLinks">
+      <label class="form-check-label" for="a11yLinks">Sublinhar todos os links</label>
+    </div>
+    <button class="btn btn-il-ghost w-100" id="a11yReset" type="button"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restaurar padrão</button>
+    <p class="small text-muted mt-4 mb-0">As preferências ficam salvas neste navegador. Atalho: <span class="il-kbd">Tab</span> navega, <span class="il-kbd">Esc</span> fecha este painel.</p>
+  </div>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+</body>
+</html>

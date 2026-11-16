@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Entre em contato com o InputLab: relate problemas, sugira termos e skins.">
+  <meta name="theme-color" content="#0F1117">
+  <title>Contato · InputLab</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body data-page="contato">
+
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+<div id="il-live" class="visually-hidden" aria-live="polite"></div>
+<header>
+  <nav class="navbar navbar-expand-lg il-navbar sticky-top" aria-label="Navegação principal">
+    <div class="container">
+      <a class="navbar-brand fs-4" href="index.html"><span class="brand-p1">Input</span>Lab</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Abrir menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto ms-lg-4">
+          <li class="nav-item"><a class="nav-link" data-page="inicio" href="index.html">Início</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="lab" href="lab.html">Lab</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="glossario" href="glossario.html">Glossário</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="contato" href="contato.html">Contato</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <button class="btn btn-il-ghost btn-sm" type="button" data-il-theme-toggle aria-pressed="true" aria-label="Mudar para modo claro"><i class="bi bi-sun-fill" aria-hidden="true"></i></button>
+          <button class="btn btn-il-ghost btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel"><i class="bi bi-universal-access" aria-hidden="true"></i> Acessibilidade</button>
+          <div id="navUser"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<main id="conteudo" tabindex="-1">
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-5">
+        <p class="il-kicker mb-1">Contato</p>
+        <h1 class="il-display h1 mb-3">Fale com a gente</h1>
+        <p class="text-muted">Encontrou um controle que não funciona, quer sugerir um termo para o glossário ou uma skin nova? Mande uma mensagem.</p>
+        <div class="d-grid gap-3 mt-4">
+          <article class="il-card p-3 d-flex gap-3 align-items-start">
+            <div class="il-icon il-p1 flex-shrink-0"><i class="bi bi-bug" aria-hidden="true"></i></div>
+            <div><h2 class="h6 fw-bold mb-1">Relatar problema</h2><p class="small text-muted mb-0">Informe o navegador, o sistema e o modelo do controle.</p></div>
+          </article>
+          <article class="il-card p-3 d-flex gap-3 align-items-start">
+            <div class="il-icon il-p2 flex-shrink-0"><i class="bi bi-lightbulb" aria-hidden="true"></i></div>
+            <div><h2 class="h6 fw-bold mb-1">Sugestões</h2><p class="small text-muted mb-0">Novos layouts, movimentos ou termos.</p></div>
+          </article>
+          <article class="il-card p-3 d-flex gap-3 align-items-start" id="acessibilidade">
+            <div class="il-icon il-gold flex-shrink-0"><i class="bi bi-universal-access" aria-hidden="true"></i></div>
+            <div><h2 class="h6 fw-bold mb-1">Declaração de acessibilidade</h2><p class="small text-muted mb-0">O InputLab busca atender o WCAG 2.2 nível AA: contraste mínimo de 4.5:1, navegação completa por teclado, foco visível, textos alternativos e opções de fonte, contraste e movimento. Se algo não funcionar para você, conte para a gente.</p></div>
+          </article>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <form class="il-card p-4 p-md-5" id="contactForm" novalidate aria-labelledby="formTitle">
+          <h2 class="h4 fw-bold mb-1" id="formTitle">Enviar mensagem</h2>
+          <p class="small text-muted mb-4">Campos marcados com <span aria-hidden="true">*</span><span class="visually-hidden">asterisco</span> são obrigatórios.</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="cName">Nome *</label>
+              <input class="form-control" id="cName" name="name" autocomplete="name" required minlength="2">
+              <div class="invalid-feedback">Informe seu nome.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="cEmail">E-mail *</label>
+              <input type="email" class="form-control" id="cEmail" name="email" autocomplete="email" required>
+              <div class="invalid-feedback">Informe um e-mail válido.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="cSubject">Assunto *</label>
+              <select class="form-select" id="cSubject" name="subject" required>
+                <option value="">Selecione…</option>
+                <option>Relatar problema</option>
+                <option>Sugerir termo ou skin</option>
+                <option>Acessibilidade</option>
+                <option>Outro</option>
+              </select>
+              <div class="invalid-feedback">Escolha um assunto.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="cDevice">Controle usado</label>
+              <input class="form-control" id="cDevice" name="device" placeholder="Ex.: Xbox 360, hitbox, teclado">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="cMessage">Mensagem *</label>
+              <textarea class="form-control" id="cMessage" name="message" rows="6" required minlength="10" maxlength="500" aria-describedby="msgCounter"></textarea>
+              <div class="invalid-feedback">Escreva pelo menos 10 caracteres.</div>
+              <div class="text-end"><small class="text-muted" id="msgCounter">0/500</small></div>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="cConsent" name="consent" required>
+                <label class="form-check-label" for="cConsent">Concordo em ser contatado(a) por e-mail sobre esta mensagem. *</label>
+                <div class="invalid-feedback">É preciso concordar para enviar.</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-il-p1 btn-lg mt-4 px-4" type="submit"><i class="bi bi-send" aria-hidden="true"></i> Enviar</button>
+          <div id="contactAlert" role="status" tabindex="-1" hidden></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="il-footer mt-5 pt-5 pb-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <p class="fs-4 fw-bold mb-2"><span class="il-p1">Input</span>Lab</p>
+        <p class="text-muted">Personalize seu controle, veja seus inputs em notação de jogos de luta e treine sua execução.</p>
+      </div>
+      <div class="col-6 col-md-2">
+        <h2 class="h6 fw-bold">Site</h2>
+        <ul class="list-unstyled">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="lab.html">Lab</a></li>
+          <li><a href="glossario.html">Glossário</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-3">
+        <h2 class="h6 fw-bold">Recursos</h2>
+        <ul class="list-unstyled">
+          <li><a href="lab.html#overlay">Overlay para OBS</a></li>
+          <li><a href="login.html">Entrar / Criar conta</a></li>
+          <li><a href="contato.html#acessibilidade">Declaração de acessibilidade</a></li>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h2 class="h6 fw-bold">Projeto</h2>
+        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
+        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+      </div>
+    </div>
+    <hr class="my-4">
+    <p class="text-muted small mb-0">© <span id="year">2026</span> InputLab. Projeto acadêmico sem fins lucrativos. Nomes de jogos citados pertencem aos seus donos.</p>
+  </div>
+</footer>
+
+<button class="btn btn-il-p2 il-a11y-fab" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel" aria-label="Abrir opções de acessibilidade" title="Acessibilidade">
+  <i class="bi bi-universal-access" aria-hidden="true"></i>
+</button>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="mb-4">
+      <label for="a11yTheme" class="form-label">Tema</label>
+      <select id="a11yTheme" class="form-select">
+        <option value="auto">Automático (segue o sistema)</option>
+        <option value="dark">Escuro</option>
+        <option value="light">Claro</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <span class="form-label d-block" id="fontLabel">Tamanho do texto</span>
+      <div class="btn-group" role="group" aria-labelledby="fontLabel">
+        <button class="btn btn-il-ghost" id="a11yFontDown" type="button" aria-label="Diminuir texto">A−</button>
+        <span class="btn btn-il-ghost disabled" id="a11yFontValue" aria-live="polite">100%</span>
+        <button class="btn btn-il-ghost" id="a11yFontUp" type="button" aria-label="Aumentar texto">A+</button>
+      </div>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yContrast">
+      <label class="form-check-label" for="a11yContrast">Alto contraste</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yMotion">
+      <label class="form-check-label" for="a11yMotion">Reduzir animações (pausa o carrossel)</label>
+    </div>
+    <div class="form-check form-switch mb-4">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yLinks">
+      <label class="form-check-label" for="a11yLinks">Sublinhar todos os links</label>
+    </div>
+    <button class="btn btn-il-ghost w-100" id="a11yReset" type="button"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restaurar padrão</button>
+    <p class="small text-muted mt-4 mb-0">As preferências ficam salvas neste navegador. Atalho: <span class="il-kbd">Tab</span> navega, <span class="il-kbd">Esc</span> fecha este painel.</p>
+  </div>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/forms.js"></script>
+</body>
+</html>

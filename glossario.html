@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Glossário pesquisável de termos de jogos de luta: notação numpad, frame data, estratégia e hardware.">
+  <meta name="theme-color" content="#0F1117">
+  <title>Glossário · InputLab</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body data-page="glossario">
+
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+<div id="il-live" class="visually-hidden" aria-live="polite"></div>
+<header>
+  <nav class="navbar navbar-expand-lg il-navbar sticky-top" aria-label="Navegação principal">
+    <div class="container">
+      <a class="navbar-brand fs-4" href="index.html"><span class="brand-p1">Input</span>Lab</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Abrir menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto ms-lg-4">
+          <li class="nav-item"><a class="nav-link" data-page="inicio" href="index.html">Início</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="lab" href="lab.html">Lab</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="glossario" href="glossario.html">Glossário</a></li>
+          <li class="nav-item"><a class="nav-link" data-page="contato" href="contato.html">Contato</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <button class="btn btn-il-ghost btn-sm" type="button" data-il-theme-toggle aria-pressed="true" aria-label="Mudar para modo claro"><i class="bi bi-sun-fill" aria-hidden="true"></i></button>
+          <button class="btn btn-il-ghost btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel"><i class="bi bi-universal-access" aria-hidden="true"></i> Acessibilidade</button>
+          <div id="navUser"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<main id="conteudo" tabindex="-1">
+
+<section class="py-5">
+  <div class="container">
+    <p class="il-kicker mb-1">Glossário</p>
+    <h1 class="il-display h1 mb-3">Fale a língua dos jogos de luta</h1>
+    <p class="lead text-muted mb-4" style="max-width:48rem">Termos de notação, frames, estratégia e hardware explicados sem jargão. Pesquise por nome, descrição ou pela própria notação (ex.: <span class="il-kbd">623</span>).</p>
+
+    <form class="il-card p-3 mb-3" id="searchForm" role="search" aria-label="Pesquisar no glossário">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-transparent border-0"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <label for="searchInput" class="visually-hidden">Pesquisar termo</label>
+        <input type="search" class="form-control border-0" id="searchInput" placeholder="Pesquisar: frame, combo, 236, hitbox…" autocomplete="off">
+      </div>
+    </form>
+    <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtrar por categoria">
+      <button class="btn btn-il-ghost btn-sm il-filter active" data-cat="todos" aria-pressed="true">Todos</button>
+      <button class="btn btn-il-ghost btn-sm il-filter" data-cat="notacao" aria-pressed="false">Notação</button>
+      <button class="btn btn-il-ghost btn-sm il-filter" data-cat="frames" aria-pressed="false">Frames</button>
+      <button class="btn btn-il-ghost btn-sm il-filter" data-cat="estrategia" aria-pressed="false">Estratégia</button>
+      <button class="btn btn-il-ghost btn-sm il-filter" data-cat="hardware" aria-pressed="false">Hardware</button>
+    </div>
+    <p class="small text-muted" id="resultCount" role="status" aria-live="polite"></p>
+    <div class="row g-4" id="results"></div>
+    <div class="il-card p-5 text-center" id="emptyState" hidden>
+      <p class="fs-1 mb-2" aria-hidden="true"><i class="bi bi-emoji-dizzy"></i></p>
+      <p class="fw-bold mb-1">Nenhum termo encontrado.</p>
+      <p class="text-muted mb-3">Tente outra palavra, ou sugira esse termo para a gente.</p>
+      <a href="contato.html" class="btn btn-il-p2">Sugerir termo</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="il-footer mt-5 pt-5 pb-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <p class="fs-4 fw-bold mb-2"><span class="il-p1">Input</span>Lab</p>
+        <p class="text-muted">Personalize seu controle, veja seus inputs em notação de jogos de luta e treine sua execução.</p>
+      </div>
+      <div class="col-6 col-md-2">
+        <h2 class="h6 fw-bold">Site</h2>
+        <ul class="list-unstyled">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="lab.html">Lab</a></li>
+          <li><a href="glossario.html">Glossário</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-3">
+        <h2 class="h6 fw-bold">Recursos</h2>
+        <ul class="list-unstyled">
+          <li><a href="lab.html#overlay">Overlay para OBS</a></li>
+          <li><a href="login.html">Entrar / Criar conta</a></li>
+          <li><a href="contato.html#acessibilidade">Declaração de acessibilidade</a></li>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h2 class="h6 fw-bold">Projeto</h2>
+        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
+        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+      </div>
+    </div>
+    <hr class="my-4">
+    <p class="text-muted small mb-0">© <span id="year">2026</span> InputLab. Projeto acadêmico sem fins lucrativos. Nomes de jogos citados pertencem aos seus donos.</p>
+  </div>
+</footer>
+
+<button class="btn btn-il-p2 il-a11y-fab" type="button" data-bs-toggle="offcanvas" data-bs-target="#a11yPanel" aria-controls="a11yPanel" aria-label="Abrir opções de acessibilidade" title="Acessibilidade">
+  <i class="bi bi-universal-access" aria-hidden="true"></i>
+</button>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="mb-4">
+      <label for="a11yTheme" class="form-label">Tema</label>
+      <select id="a11yTheme" class="form-select">
+        <option value="auto">Automático (segue o sistema)</option>
+        <option value="dark">Escuro</option>
+        <option value="light">Claro</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <span class="form-label d-block" id="fontLabel">Tamanho do texto</span>
+      <div class="btn-group" role="group" aria-labelledby="fontLabel">
+        <button class="btn btn-il-ghost" id="a11yFontDown" type="button" aria-label="Diminuir texto">A−</button>
+        <span class="btn btn-il-ghost disabled" id="a11yFontValue" aria-live="polite">100%</span>
+        <button class="btn btn-il-ghost" id="a11yFontUp" type="button" aria-label="Aumentar texto">A+</button>
+      </div>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yContrast">
+      <label class="form-check-label" for="a11yContrast">Alto contraste</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yMotion">
+      <label class="form-check-label" for="a11yMotion">Reduzir animações (pausa o carrossel)</label>
+    </div>
+    <div class="form-check form-switch mb-4">
+      <input class="form-check-input" type="checkbox" role="switch" id="a11yLinks">
+      <label class="form-check-label" for="a11yLinks">Sublinhar todos os links</label>
+    </div>
+    <button class="btn btn-il-ghost w-100" id="a11yReset" type="button"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restaurar padrão</button>
+    <p class="small text-muted mt-4 mb-0">As preferências ficam salvas neste navegador. Atalho: <span class="il-kbd">Tab</span> navega, <span class="il-kbd">Esc</span> fecha este painel.</p>
+  </div>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/glossario.js"></script>
+</body>
+</html>
