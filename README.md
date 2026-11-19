@@ -4,7 +4,7 @@ Personalize seu controle, veja seus inputs em notação de jogos de luta e trein
 
 Projeto Final da disciplina **Desenvolvimento de Interfaces (2/2026)**, com o Prof. Dr. Felipe Batista da Silva.
 
-> **Site publicado:** `https://SEU-USUARIO.github.io/inputlab/` *(atualize depois de publicar)*
+> **Site publicado:** `https://SEU-USUARIO.github.io/inputlab/`
 
 ---
 
