@@ -42,7 +42,8 @@
     { seq: [4, 2, 1],          code: "421",    name: "DP invertido" },
     { seq: [2, 3, 6],          code: "236",    name: "Quarto de círculo para frente (QCF)" },
     { seq: [2, 1, 4],          code: "214",    name: "Quarto de círculo para trás (QCB)" },
-    { seq: [2, 2],             code: "22",     name: "Baixo, baixo" }
+    { seq: [2, 2],             code: "22",     name: "Baixo, baixo" },
+    { seq: [4,1,2,3,6, 4],     code: "41236",  name: "Meia-lua para frente + trás" }  // repetido para teste de ordem
   ];
 
   /**
