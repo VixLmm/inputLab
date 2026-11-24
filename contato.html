@@ -13,6 +13,7 @@
   <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
   <script src="js/auth.js"></script>
   <script src="js/main.js"></script>
+  <script type="module" src="js/firebase-auth.js"></script>
 </head>
 <body data-page="contato">
 
@@ -47,20 +48,16 @@
   <div class="container">
     <div class="row g-5">
       <div class="col-lg-5">
-        <p class="il-kicker mb-1">Contato</p>
-        <h1 class="il-display h1 mb-3">Fale com a gente</h1>
+        <h1 class="il-display h1 mb-3">Contato</h1>
         <p class="text-muted">Encontrou um controle que não funciona, quer sugerir um termo para o glossário ou uma skin nova? Mande uma mensagem.</p>
         <div class="d-grid gap-3 mt-4">
           <article class="il-card p-3 d-flex gap-3 align-items-start">
-            <div class="il-icon il-p1 flex-shrink-0"><i class="bi bi-bug" aria-hidden="true"></i></div>
             <div><h2 class="h6 fw-bold mb-1">Relatar problema</h2><p class="small text-muted mb-0">Informe o navegador, o sistema e o modelo do controle.</p></div>
           </article>
           <article class="il-card p-3 d-flex gap-3 align-items-start">
-            <div class="il-icon il-p2 flex-shrink-0"><i class="bi bi-lightbulb" aria-hidden="true"></i></div>
             <div><h2 class="h6 fw-bold mb-1">Sugestões</h2><p class="small text-muted mb-0">Novos layouts, movimentos ou termos.</p></div>
           </article>
           <article class="il-card p-3 d-flex gap-3 align-items-start" id="acessibilidade">
-            <div class="il-icon il-gold flex-shrink-0"><i class="bi bi-universal-access" aria-hidden="true"></i></div>
             <div><h2 class="h6 fw-bold mb-1">Declaração de acessibilidade</h2><p class="small text-muted mb-0">O InputLab busca atender o WCAG 2.2 nível AA: contraste mínimo de 4.5:1, navegação completa por teclado, foco visível, textos alternativos e opções de fonte, contraste e movimento. Se algo não funcionar para você, conte para a gente.</p></div>
           </article>
         </div>
@@ -145,8 +142,8 @@
       </div>
       <div class="col-md-3">
         <h2 class="h6 fw-bold">Projeto</h2>
-        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
-        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+        <p class="text-muted small mb-2">Projeto Final de Desenvolvimento de Interfaces, 2/2026.</p>
+        <a href="https://github.com/VixLmm/inputLab" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
       </div>
     </div>
     <hr class="my-4">
@@ -160,7 +157,7 @@
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
   <div class="offcanvas-header border-bottom">
-    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle">Acessibilidade</h2>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
   <div class="offcanvas-body">

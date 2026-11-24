@@ -13,6 +13,7 @@
   <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
   <script src="js/auth.js"></script>
   <script src="js/main.js"></script>
+  <script type="module" src="js/firebase-auth.js"></script>
 </head>
 <body data-page="inicio">
 
@@ -43,144 +44,98 @@
 </header>
 <main id="conteudo" tabindex="-1">
 
-<section class="il-hero py-5">
-  <div class="container py-lg-5">
-    <div class="row align-items-center g-5">
+<section class="il-hero py-4">
+  <div class="container py-lg-4">
+    <div class="row align-items-center g-4">
       <div class="col-lg-6">
-        <p class="il-kicker mb-3">Para quem joga jogos de luta</p>
-        <h1 class="il-display display-3 mb-4">Veja cada <span class="il-p1">input</span>.<br>Treine cada <span class="il-p2">movimento</span>.</h1>
-        <p class="lead text-muted mb-4">O InputLab mostra em tempo real o que você aperta no controle, arcade stick ou leverless, em notação numpad — a mesma usada pela comunidade. Personalize as cores, salve seus presets e leve o visual para a sua stream.</p>
+        <h1 class="il-display display-3 mb-4">Visualize seus inputs!</h1>
+        <p class="lead text-muted mb-4">O InputLab mostra em tempo real o que você aperta no controle, arcade stick ou leverless, em notação numpad. Personalize as cores, salve seus presets e leve o visual para a sua stream.</p>
         <div class="d-flex flex-wrap gap-3">
           <a href="lab.html" class="btn btn-il-p1 btn-lg px-4"><i class="bi bi-controller" aria-hidden="true"></i> Abrir o Lab</a>
           <a href="glossario.html" class="btn btn-il-ghost btn-lg px-4">Aprender a notação</a>
         </div>
-        <p class="small text-muted mt-3 mb-0"><i class="bi bi-keyboard" aria-hidden="true"></i> Sem controle? Use <span class="il-kbd">W</span><span class="il-kbd">A</span><span class="il-kbd">S</span><span class="il-kbd">D</span> e <span class="il-kbd">U</span><span class="il-kbd">I</span><span class="il-kbd">O</span><span class="il-kbd">P</span> / <span class="il-kbd">J</span><span class="il-kbd">K</span><span class="il-kbd">L</span><span class="il-kbd">Ç</span>.</p>
       </div>
       <div class="col-lg-6">
-        <div class="il-card p-4 p-md-5 text-center">
-          <p class="il-kicker mb-3">Como ler a notação</p>
-          <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
-            <div class="il-numpad" aria-label="Teclado numérico de direções">
-              <span>7</span><span>8</span><span>9</span>
-              <span>4</span><span>5</span><span class="on">6</span>
-              <span>1</span><span class="on">2</span><span class="on">3</span>
-            </div>
-            <div class="text-start">
-              <p class="display-6 fw-bold mb-1"><span class="il-gold">236</span><span class="il-p2">P</span></p>
-              <p class="text-muted mb-0">baixo → baixo-frente → frente<br>+ soco</p>
-            </div>
+      <div id="skinCarousel" class="carousel slide il-carousel" data-bs-ride="carousel" data-bs-interval="6000" aria-roledescription="carrossel" aria-label="Skins de controle">
+        <div class="carousel-inner">
+          <div class="carousel-item active" aria-roledescription="slide" aria-label="1 de 4">
+            <img src="img/skin-arcade.png" alt="Arcade stick de 8 botões com alavanca vermelha, socos em azul, chutes em vermelho e botões macro em dourado">
+            <div class="carousel-caption"><h2 class="h5 fw-bold mb-1">Arcade Clássico</h2><p class="text-muted mb-2">8 botões no padrão Vewlix, com as cores P1 vermelho e P2 azul.</p><a href="lab.html?preset=arcade" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
           </div>
-          <p class="small text-muted mt-4 mb-0">O 5 é o neutro. Imagine o teclado numérico com seu personagem olhando para a direita.</p>
+          <div class="carousel-item" aria-roledescription="slide" aria-label="2 de 4">
+            <img src="img/skin-leverless.png" alt="Controle leverless com as direções em botões e 8 botões de ataque, socos em azul e chutes em vermelho" loading="lazy">
+            <div class="carousel-caption"><h2 class="h5 fw-bold mb-1">Leverless</h2><p class="text-muted mb-2">Direções em botões, com o cima no polegar, e 8 botões de ataque.</p><a href="lab.html?preset=leverless" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
+          </div>
+          <div class="carousel-item" aria-roledescription="slide" aria-label="3 de 4">
+            <img src="img/skin-ps5.png" alt="Controle no layout do PlayStation 5, com analógicos simétricos, touchpad no centro, gatilhos e botões de face" loading="lazy">
+            <div class="carousel-caption"><h2 class="h5 fw-bold mb-1">Controle PS5</h2><p class="text-muted mb-2">Layout PlayStation: analógicos lado a lado e touchpad no centro.</p><a href="lab.html?preset=ps5" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
+          </div>
+          <div class="carousel-item" aria-roledescription="slide" aria-label="4 de 4">
+            <img src="img/skin-xbox.png" alt="Controle no layout do Xbox, com analógicos assimétricos, direcional embaixo, gatilhos e botões de face" loading="lazy">
+            <div class="carousel-caption"><h2 class="h5 fw-bold mb-1">Controle Xbox</h2><p class="text-muted mb-2">Layout Xbox: analógico esquerdo no alto e direcional embaixo.</p><a href="lab.html?preset=xbox" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
+          </div>
         </div>
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Skin 1"></button>
+          <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="1" aria-label="Skin 2"></button>
+          <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="2" aria-label="Skin 3"></button>
+          <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="3" aria-label="Skin 4"></button>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#skinCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span></button>
+        <button class="carousel-control-next" type="button" data-bs-target="#skinCarousel" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próxima</span></button>
+      </div>
+        <p class="text-muted small mt-2 mb-0">O carrossel pausa ao passar o mouse, ao focar com o teclado ou com “Reduzir animações”. Para guardar suas configurações, <a href="login.html#cadastro">crie uma conta</a>.</p>
       </div>
     </div>
   </div>
 </section>
-
 <section class="py-5" aria-labelledby="recursosTitulo">
   <div class="container">
-    <p class="il-kicker mb-2">Recursos</p>
-    <h2 id="recursosTitulo" class="il-display h1 mb-4">Tudo que você precisa para treinar</h2>
-    <div class="row g-4">
-      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
-        <div class="il-icon il-p1 mb-3"><i class="bi bi-activity" aria-hidden="true"></i></div>
-        <h3 class="h5 fw-bold">Inputs ao vivo</h3>
-        <p class="text-muted mb-0">Lê controle via Gamepad API ou teclado e mostra cada direção e botão no mesmo instante.</p>
-      </article></div>
-      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
-        <div class="il-icon il-p2 mb-3"><i class="bi bi-list-ol" aria-hidden="true"></i></div>
-        <h3 class="h5 fw-bold">Histórico com frames</h3>
-        <p class="text-muted mb-0">Igual ao modo treino dos jogos: quanto tempo (em frames) você segurou cada input.</p>
-      </article></div>
-      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
-        <div class="il-icon il-gold mb-3"><i class="bi bi-stars" aria-hidden="true"></i></div>
-        <h3 class="h5 fw-bold">Detecção de especiais</h3>
-        <p class="text-muted mb-0">Reconhece 236, 214, 623, 41236 e outros, e conta quantas vezes você acertou cada um.</p>
-      </article></div>
-      <div class="col-md-6 col-lg-3"><article class="il-card il-card-hover h-100 p-4">
-        <div class="il-icon il-p1 mb-3"><i class="bi bi-broadcast" aria-hidden="true"></i></div>
-        <h3 class="h5 fw-bold">Overlay para OBS</h3>
-        <p class="text-muted mb-0">Gera um link com fundo transparente para usar como fonte de navegador na sua stream.</p>
-      </article></div>
+    <h2 id="recursosTitulo" class="il-display h1 mb-4">O que o Lab mostra</h2>
+    <div class="il-grid">
+      <article><p class="il-index mb-2">01</p><h3 class="h4">Inputs ao vivo</h3><p class="text-muted mb-0">Lê o controle pela Gamepad API, ou o teclado, e mostra cada direção e botão no mesmo instante.</p></article>
+      <article><p class="il-index mb-2">02</p><h3 class="h4">Histórico com frames</h3><p class="text-muted mb-0">Como no modo treino dos jogos: quanto tempo, em frames, você segurou cada input.</p></article>
+      <article><p class="il-index mb-2">03</p><h3 class="h4">Detecção de especiais</h3><p class="text-muted mb-0">Reconhece 236, 214, 623, 41236 e outros, e conta quantas vezes cada um saiu certo.</p></article>
+      <article><p class="il-index mb-2">04</p><h3 class="h4">Overlay para OBS</h3><p class="text-muted mb-0">Gera um link com fundo transparente para usar como fonte de navegador na sua stream.</p></article>
     </div>
   </div>
 </section>
 
-<section class="py-5" aria-labelledby="skinsTitulo">
+<section class="py-5" aria-labelledby="notacaoTitulo">
   <div class="container">
-    <div class="row g-5 align-items-center">
-      <div class="col-lg-5">
-        <p class="il-kicker mb-2">Galeria</p>
-        <h2 id="skinsTitulo" class="il-display h1 mb-3">Escolha um ponto de partida</h2>
-        <p class="text-muted">Skins prontas para arcade stick, leverless e controle. Abra no Lab e mude a cor de cada botão, adicione botões, arraste para o seu layout ou aplique o preset do seu jogo.</p>
-        <p class="text-muted small"><i class="bi bi-pause-circle" aria-hidden="true"></i> O carrossel pausa quando você passa o mouse, foca com o teclado ou ativa “Reduzir animações”.</p>
+    <div class="row g-5 align-items-start">
+      <div class="col-lg-4">
+        <h2 id="notacaoTitulo" class="il-display h1 mb-3">Leia a notação em 30 segundos</h2>
+        <p class="text-muted">Imagine o teclado numérico com o seu personagem olhando para a direita. O 5 é ficar parado; cada número é uma direção.</p>
+        <div class="il-numpad big mb-3" aria-label="Teclado numérico de direções: 7 8 9 em cima, 4 5 6 no meio, 1 2 3 embaixo">
+          <span>7</span><span>8</span><span>9</span>
+          <span>4</span><span>5</span><span>6</span>
+          <span>1</span><span>2</span><span>3</span>
+        </div>
+        <p class="mb-0"><a href="glossario.html">Ver todos os termos no glossário</a></p>
       </div>
-      <div class="col-lg-7">
-        <div id="skinCarousel" class="carousel slide il-carousel" data-bs-ride="carousel" data-bs-interval="6000" aria-roledescription="carrossel" aria-label="Skins de controle">
-          <div class="carousel-inner">
-            <div class="carousel-item active" aria-roledescription="slide" aria-label="1 de 4">
-              <img src="img/skin-arcade.png" alt="Arcade stick de 8 botões com alavanca vermelha, socos em azul, chutes em vermelho e botões macro em dourado" loading="lazy">
-              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Arcade Clássico</h3><p class="text-muted mb-2">8 botões no padrão Vewlix, com as cores P1 vermelho e P2 azul.</p><a href="lab.html?preset=arcade" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
-            </div>
-            <div class="carousel-item" aria-roledescription="slide" aria-label="2 de 4">
-              <img src="img/skin-torneio.png" alt="Controle leverless com direções em botões e 8 botões no layout de Street Fighter 6" loading="lazy">
-              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Leverless SF6</h3><p class="text-muted mb-2">Direções em botões e preset de Street Fighter 6, com Drive Impact e Parry.</p><a href="lab.html?preset=torneio" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
-            </div>
-            <div class="carousel-item" aria-roledescription="slide" aria-label="3 de 4">
-              <img src="img/skin-neon.png" alt="Desenho de controle estilo Xbox com gatilhos, dois analógicos, direcional e botões em ciano e rosa" loading="lazy">
-              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Pad Neon</h3><p class="text-muted mb-2">Controle desenhado como o de verdade: gatilhos, bumpers e dois analógicos.</p><a href="lab.html?preset=neon" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
-            </div>
-            <div class="carousel-item" aria-roledescription="slide" aria-label="4 de 4">
-              <img src="img/skin-mono.png" alt="Arcade stick em tons de cinza" loading="lazy">
-              <div class="carousel-caption"><h3 class="h5 fw-bold mb-1">Monocromático</h3><p class="text-muted mb-2">Discreto, para não competir com o jogo na stream.</p><a href="lab.html?preset=mono" class="btn btn-il-p1 btn-sm">Usar esta skin</a></div>
-            </div>
-          </div>
-          <div class="carousel-indicators">
-            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Skin 1"></button>
-            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="1" aria-label="Skin 2"></button>
-            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="2" aria-label="Skin 3"></button>
-            <button type="button" data-bs-target="#skinCarousel" data-bs-slide-to="3" aria-label="Skin 4"></button>
-          </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#skinCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span></button>
-          <button class="carousel-control-next" type="button" data-bs-target="#skinCarousel" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próxima</span></button>
+      <div class="col-lg-8">
+        <div class="row g-3">
+          <div class="col-md-4"><article class="il-card h-100 p-4">
+            <p class="il-seq il-gold mb-1">236</p>
+            <h3 class="h5">Quarto de círculo</h3>
+            <p class="text-muted small mb-2">baixo → baixo-frente → frente</p>
+            <p class="small mb-0">O especial mais comum: as bolas de fogo.</p>
+          </article></div>
+          <div class="col-md-4"><article class="il-card h-100 p-4">
+            <p class="il-seq il-gold mb-1">623</p>
+            <h3 class="h5">Dragon Punch</h3>
+            <p class="text-muted small mb-2">frente → baixo → baixo-frente</p>
+            <p class="small mb-0">Um "Z" no direcional. Usado contra quem pula em você.</p>
+          </article></div>
+          <div class="col-md-4"><article class="il-card h-100 p-4">
+            <p class="il-seq il-gold mb-1">[4]6</p>
+            <h3 class="h5">Carga</h3>
+            <p class="text-muted small mb-2">segure trás → frente</p>
+            <p class="small mb-0">Os colchetes indicam segurar a direção por um tempo.</p>
+          </article></div>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-5" aria-labelledby="comoTitulo">
-  <div class="container">
-    <p class="il-kicker mb-2">Passo a passo</p>
-    <h2 id="comoTitulo" class="il-display h1 mb-4">Como funciona</h2>
-    <div class="row g-4">
-      <div class="col-md-4"><article class="il-card h-100 p-4">
-        <p class="display-5 fw-bold il-p1 mb-2">1</p>
-        <h3 class="h5 fw-bold">Conecte</h3>
-        <p class="text-muted mb-0">Plugue o controle e aperte qualquer botão — por privacidade, o navegador só revela o controle depois do primeiro aperto. Ou use o teclado.</p>
-      </article></div>
-      <div class="col-md-4"><article class="il-card h-100 p-4">
-        <p class="display-5 fw-bold il-p2 mb-2">2</p>
-        <h3 class="h5 fw-bold">Personalize</h3>
-        <p class="text-muted mb-0">Aplique o preset do seu jogo, mude a cor de cada botão, adicione botões e arraste para reproduzir o seu controle.</p>
-      </article></div>
-      <div class="col-md-4"><article class="il-card h-100 p-4">
-        <p class="display-5 fw-bold il-gold mb-2">3</p>
-        <h3 class="h5 fw-bold">Treine e mostre</h3>
-        <p class="text-muted mb-0">Acompanhe o histórico, veja seus especiais sendo reconhecidos e copie o link do overlay para o OBS.</p>
-      </article></div>
-    </div>
-  </div>
-</section>
-
-<section class="py-5">
-  <div class="container">
-    <div class="il-card p-4 p-md-5 d-md-flex align-items-center justify-content-between gap-4">
-      <div>
-        <h2 class="il-display h2 mb-2">Salve seus presets</h2>
-        <p class="text-muted mb-md-0">Crie uma conta para guardar quantas configurações quiser — uma para cada jogo ou controle.</p>
-      </div>
-      <a href="login.html#cadastro" class="btn btn-il-p2 btn-lg px-4 flex-shrink-0">Criar conta grátis</a>
     </div>
   </div>
 </section>
@@ -213,8 +168,8 @@
       </div>
       <div class="col-md-3">
         <h2 class="h6 fw-bold">Projeto</h2>
-        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
-        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+        <p class="text-muted small mb-2">Projeto Final de Desenvolvimento de Interfaces, 2/2026.</p>
+        <a href="https://github.com/VixLmm/inputLab" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
       </div>
     </div>
     <hr class="my-4">
@@ -228,7 +183,7 @@
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
   <div class="offcanvas-header border-bottom">
-    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle">Acessibilidade</h2>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
   <div class="offcanvas-body">

@@ -89,18 +89,8 @@
       if (a.getAttribute("data-page") === page) { a.classList.add("active"); a.setAttribute("aria-current", "page"); }
     });
 
-    // Estado de login (sessão fictícia salva no navegador)
-    const user = window.InputLabAuth ? window.InputLabAuth.current() : null;
-    const slot = document.getElementById("navUser");
-    if (slot) {
-      if (user) {
-        slot.innerHTML = '<div class="dropdown"><button class="btn btn-il-ghost btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle" aria-hidden="true"></i> ' +
-          escapeHtml(user.name.split(" ")[0]) + '</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="lab.html">Meus presets</a></li><li><button class="dropdown-item" id="navLogout">Sair</button></li></ul></div>';
-        document.getElementById("navLogout").addEventListener("click", function () { window.InputLabAuth.logout(); location.href = "index.html"; });
-      } else {
-        slot.innerHTML = '<a class="btn btn-il-ghost btn-sm" href="login.html"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Entrar</a>';
-      }
-    }
+    // Estado de login: o menu é redesenhado sempre que alguém entra ou sai
+    if (window.InputLabAuth) window.InputLabAuth.onChange(renderNavUser);
 
     const year = document.getElementById("year");
     if (year) year.textContent = new Date().getFullYear();
@@ -116,6 +106,21 @@
       const c = bootstrap.Carousel.getOrCreateInstance(el);
       if (reduce) c.pause();
     });
+  }
+
+  function renderNavUser(user) {
+    const slot = document.getElementById("navUser");
+    if (!slot) return;
+    if (user) {
+      slot.innerHTML = '<div class="dropdown"><button class="btn btn-il-ghost btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle" aria-hidden="true"></i> ' +
+        escapeHtml(user.name.split(" ")[0]) + '</button><ul class="dropdown-menu dropdown-menu-end"><li><span class="dropdown-item-text small text-muted">' + escapeHtml(user.email) + '</span></li><li><a class="dropdown-item" href="lab.html">Meus presets</a></li><li><button class="dropdown-item" id="navLogout">Sair</button></li></ul></div>';
+      document.getElementById("navLogout").addEventListener("click", async function () {
+        await window.InputLabAuth.logout();
+        location.href = "index.html";
+      });
+    } else {
+      slot.innerHTML = '<a class="btn btn-il-ghost btn-sm" href="login.html"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Entrar</a>';
+    }
   }
 
   function escapeHtml(s) {

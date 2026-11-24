@@ -13,6 +13,7 @@
   <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
   <script src="js/auth.js"></script>
   <script src="js/main.js"></script>
+  <script type="module" src="js/firebase-auth.js"></script>
 </head>
 <body data-page="lab">
 
@@ -47,10 +48,9 @@
   <div class="container">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
       <div>
-        <p class="il-kicker mb-1">Lab</p>
         <h1 class="il-display h1 mb-0">Visualizador de inputs</h1>
       </div>
-      <p class="mb-0 small" role="status"><span id="padStatus" class="il-status-dot me-1" aria-hidden="true"></span><span id="padStatusText">Nenhum controle — usando teclado (aperte um botão do controle para conectar)</span></p>
+      <p class="mb-0 small" role="status"><span id="padStatus" class="il-status-dot me-1" aria-hidden="true"></span><span id="padStatusText">Nenhum controle conectado (aperte um botão do controle para conectar e confira se seu navegador permite leitura de dispositivos usb)</span></p>
     </div>
 
     <div class="row g-4">
@@ -68,7 +68,7 @@
                 <p class="visually-hidden" aria-live="polite" id="motionLive"></p>
               </div>
             </div>
-            <p class="small text-muted mb-0"><i class="bi bi-keyboard" aria-hidden="true"></i> Teclado: <span class="il-kbd">WASD</span> direções · <span class="il-kbd">U I O P</span> fileira de cima · <span class="il-kbd">J K L Ç</span> fileira de baixo</p>
+            <p class="small text-muted mb-0" id="keyHint"><i class="bi bi-keyboard" aria-hidden="true"></i> Teclado: <span class="il-kbd">WASD</span> direções · <span class="il-kbd">U I O P</span> fileira de cima · <span class="il-kbd">J K L Ç</span> fileira de baixo</p>
           </div>
         </div>
 
@@ -94,7 +94,7 @@
 
       <div class="col-lg-4">
         <form class="il-card p-4 mb-4" id="configForm" aria-labelledby="cfgTitle" novalidate onsubmit="return false">
-          <h2 class="h5 fw-bold" id="cfgTitle"><i class="bi bi-sliders il-p2" aria-hidden="true"></i> Personalizar</h2>
+          <h2 class="h5 fw-bold" id="cfgTitle">Personalizar</h2>
           <div class="row g-3 mb-3">
             <div class="col-7">
               <label class="form-label" for="cfgLayout">Tipo de controle</label>
@@ -128,6 +128,41 @@
               <select class="form-select" id="cfgSide"><option value="p1">P1 →</option><option value="p2">P2 ←</option></select>
             </div>
           </div>
+          <div class="mb-3">
+            <label class="form-label" for="cfgDirSource">Direções vêm de</label>
+            <select class="form-select" id="cfgDirSource" aria-describedby="dirSourceHelp">
+              <option value="both">D-pad e analógico</option>
+              <option value="dpad">Só o D-pad</option>
+              <option value="stick">Só o analógico esquerdo</option>
+            </select>
+            <p class="form-text text-muted small mb-0" id="dirSourceHelp">Como o modo "D-pad / LS" dos controles de luta. O teclado sempre funciona.</p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="cfgButtonStyle">Estilo dos botões</label>
+            <select class="form-select" id="cfgButtonStyle">
+              <option value="outline">Contorno (acende ao apertar)</option>
+              <option value="filled">Preenchido</option>
+            </select>
+          </div>
+          <div class="mb-3" id="btnFillBox">
+            <label class="form-label" for="cfgButtonFill">Cor de fundo dos botões</label>
+            <input type="color" class="form-control form-control-color w-100" id="cfgButtonFill" aria-describedby="btnFillHelp">
+            <p class="form-text text-muted small mb-0" id="btnFillHelp">O "miolo" de cada botão. O rótulo muda de cor sozinho para continuar legível.</p>
+          </div>
+          <fieldset class="mb-3" id="baseBox">
+            <legend class="form-label fs-6 mb-1">Base do controle</legend>
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" role="switch" id="cfgBaseTransparent" aria-describedby="baseHelp">
+              <label class="form-check-label" for="cfgBaseTransparent">Transparente</label>
+            </div>
+            <label class="form-label small" for="cfgBaseColor">Cor da base</label>
+            <input type="color" class="form-control form-control-color w-100" id="cfgBaseColor" aria-describedby="baseHelp">
+            <p class="form-text text-muted small mb-0" id="baseHelp">Transparente é o ideal para o overlay do OBS: aparece só o controle sobre o jogo. Desligue para escolher uma cor.</p>
+          </fieldset>
+          <div class="form-check form-switch mb-3" id="trailBox">
+            <input class="form-check-input" type="checkbox" role="switch" id="cfgTrail">
+            <label class="form-check-label" for="cfgTrail">Rastro do manche</label>
+          </div>
           <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" role="switch" id="cfgHistory">
             <label class="form-check-label" for="cfgHistory">Mostrar histórico</label>
@@ -141,7 +176,7 @@
               <input class="form-check-input" type="checkbox" role="switch" id="cfgEditMode">
               <label class="form-check-label" for="cfgEditMode">Editar posições (arrastar no desenho)</label>
             </div>
-            <p class="small text-muted mb-1">Cor · rótulo · mapeamento (clique para remapear) · posição · remover</p>
+            <p class="small text-muted mb-1">Cor · rótulo · <i class="bi bi-controller" aria-hidden="true"></i> controle · <i class="bi bi-keyboard" aria-hidden="true"></i> teclado (clique para remapear) · posição · remover</p>
             <ul class="list-unstyled mb-2" id="buttonList" aria-label="Botões do controle"></ul>
             <p class="small il-gold mb-2" id="remapHint" role="status" hidden></p>
 
@@ -155,6 +190,8 @@
               <p class="small mt-2 mb-0" id="selContrast" aria-live="polite"></p>
             </div>
 
+            <p class="form-label fs-6 mt-3 mb-1" id="dirKeyTitle">Teclado: direções</p>
+            <div class="d-flex flex-wrap gap-1 mb-3" id="dirKeyList" role="group" aria-labelledby="dirKeyTitle"></div>
             <button class="btn btn-il-ghost btn-sm w-100" type="button" id="btnAddButton"><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar botão</button>
             <p class="small text-muted mb-0" id="padAddNote" hidden><i class="bi bi-info-circle" aria-hidden="true"></i> No pad, os botões seguem o controle físico. Deixe o rótulo vazio para marcar um botão como “sem uso”.</p>
           </fieldset>
@@ -162,7 +199,7 @@
         </form>
 
         <section class="il-card p-4 mb-4" aria-labelledby="presetTitle">
-          <h2 class="h5 fw-bold" id="presetTitle"><i class="bi bi-bookmark-star il-gold" aria-hidden="true"></i> Meus presets</h2>
+          <h2 class="h5 fw-bold" id="presetTitle">Meus presets</h2>
           <p class="text-muted small mb-0" id="presetLoginHint"><a href="login.html">Entre na sua conta</a> para salvar presets. Sem conta, sua última configuração continua salva neste navegador.</p>
           <div id="presetSaveBox" hidden>
             <form class="d-flex gap-2 mb-3" id="presetForm" novalidate>
@@ -175,12 +212,14 @@
         </section>
 
         <section class="il-card p-4" id="overlay" aria-labelledby="overlayTitle">
-          <h2 class="h5 fw-bold" id="overlayTitle"><i class="bi bi-broadcast il-p1" aria-hidden="true"></i> Overlay para OBS</h2>
+          <h2 class="h5 fw-bold" id="overlayTitle">Overlay para OBS</h2>
           <label class="form-label small" for="overlayUrl">Link com sua configuração atual</label>
           <div class="input-group input-group-sm mb-2">
             <input class="form-control" id="overlayUrl" readonly>
             <button class="btn btn-il-p1" type="button" id="btnCopyOverlay"><i class="bi bi-clipboard" aria-hidden="true"></i> Copiar</button>
           </div>
+          <p class="small mb-2"><a id="overlayOpen" href="overlay.html" target="_blank" rel="noopener">Testar o overlay em outra aba</a></p>
+          <p class="small il-p1 fw-bold mb-2" id="overlayStale" role="status" hidden>Você mudou o controle depois de copiar o link. Copie de novo e cole na fonte do OBS: ela não se atualiza sozinha.</p>
           <p class="small text-muted mb-2">No OBS: <em>Fontes → + → Navegador</em>, cole o link, largura 720 e altura 560.</p>
           <div class="alert alert-warning small mb-0" role="note"><strong>Limitação conhecida:</strong> por segurança, navegadores (e o OBS 31+) só entregam inputs do controle para a janela em foco. Enquanto o jogo estiver em foco, o overlay pode parar de atualizar. Use-o para gravar tutoriais com o Lab em foco, ou veja as alternativas no README.</div>
         </section>
@@ -217,8 +256,8 @@
       </div>
       <div class="col-md-3">
         <h2 class="h6 fw-bold">Projeto</h2>
-        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
-        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+        <p class="text-muted small mb-2">Projeto Final de Desenvolvimento de Interfaces, 2/2026.</p>
+        <a href="https://github.com/VixLmm/inputLab" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
       </div>
     </div>
     <hr class="my-4">
@@ -232,7 +271,7 @@
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
   <div class="offcanvas-header border-bottom">
-    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle">Acessibilidade</h2>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
   <div class="offcanvas-body">
@@ -271,6 +310,7 @@
 
 <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="js/notation.js"></script>
+<script src="js/pad-assets.js"></script>
 <script src="js/pad.js"></script>
 <script src="js/gallery.js"></script>
 <script src="js/lab.js"></script>

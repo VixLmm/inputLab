@@ -1,67 +1,80 @@
 /* =========================================================
-   InputLab — autenticação DEMONSTRATIVA (somente front-end)
-   ATENÇÃO: não existe servidor. As contas ficam no localStorage
-   do próprio navegador e a senha é guardada como hash SHA-256.
-   Isso serve para demonstrar o fluxo de login na disciplina,
-   mas NÃO é segurança real (ver seção de limitações no README).
+   InputLab — "fachada" de autenticação
+   O resto do site (menu, Lab, formulários) conversa só com este
+   objeto: window.InputLabAuth. Quem faz o login de verdade é o
+   arquivo firebase-auth.js, que se conecta aqui quando carrega.
+
+   Por que separar? O Firebase carrega como módulo (de forma
+   assíncrona). Esta fachada existe desde o início da página,
+   guarda quem está logado e avisa as outras partes quando muda.
    ========================================================= */
 (function () {
   "use strict";
-  const USERS = "inputlab:users";
-  const SESSION = "inputlab:session";
+  const listeners = [];
+  let user = null;          // { uid, email, name } ou null
+  let impl = null;          // funções reais (preenchidas pelo firebase-auth.js)
+  let failure = null;       // mensagem de erro se o Firebase não carregar
+  let resolveReady;
+  const ready = new Promise(function (r) { resolveReady = r; });
 
-  function read(key, fallback) {
-    try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
-  }
-  function write(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+  function notify() { listeners.forEach(function (cb) { try { cb(user); } catch (e) { console.error(e); } }); }
+  async function call(name, args) {
+    await ready;
+    if (!impl) throw new Error(failure || "O login não está disponível no momento.");
+    return impl[name].apply(null, args);
   }
 
-  async function sha256(text) {
-    const data = new TextEncoder().encode(text);
-    const buf = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+  // Presets ficam no navegador, separados por usuário (uid do Firebase)
+  function presetKey() { return user ? "inputlab:presets:" + user.uid : null; }
+  function readPresets() {
+    try { return JSON.parse(localStorage.getItem(presetKey())) || []; } catch (e) { return []; }
+  }
+  function writePresets(list) {
+    try { localStorage.setItem(presetKey(), JSON.stringify(list)); return true; } catch (e) { return false; }
   }
 
   const Auth = {
-    current: function () {
-      const email = read(SESSION, null);
-      if (!email) return null;
-      const u = read(USERS, {})[email];
-      return u ? { email: email, name: u.name } : null;
-    },
-    register: async function (name, email, password) {
-      email = email.trim().toLowerCase();
-      const users = read(USERS, {});
-      if (users[email]) throw new Error("Já existe uma conta com esse e-mail.");
-      users[email] = { name: name.trim(), hash: await sha256(email + ":" + password), presets: [] };
-      write(USERS, users); write(SESSION, email);
-    },
-    login: async function (email, password) {
-      email = email.trim().toLowerCase();
-      const u = read(USERS, {})[email];
-      if (!u || u.hash !== await sha256(email + ":" + password)) throw new Error("E-mail ou senha incorretos.");
-      write(SESSION, email);
-    },
-    logout: function () { try { localStorage.removeItem(SESSION); } catch (e) {} },
-    getPresets: function () {
-      const s = read(SESSION, null); if (!s) return [];
-      const u = read(USERS, {})[s]; return u ? (u.presets || []) : [];
-    },
+    ready: ready,
+    isReady: false,
+    current: function () { return user; },
+    error: function () { return failure; },
+
+    /** Registra uma função chamada sempre que o usuário entra ou sai. */
+    onChange: function (cb) { listeners.push(cb); if (Auth.isReady) cb(user); },
+
+    login: function (email, password) { return call("login", [email, password]); },
+    register: function (name, email, password) { return call("register", [name, email, password]); },
+    logout: function () { return call("logout", []); },
+    resetPassword: function (email) { return call("resetPassword", [email]); },
+
+    getPresets: function () { return user ? readPresets() : []; },
     savePreset: function (preset) {
-      const s = read(SESSION, null); if (!s) return false;
-      const users = read(USERS, {}); if (!users[s]) return false;
-      const list = users[s].presets || [];
+      if (!user) return false;
+      const list = readPresets();
       const i = list.findIndex(function (p) { return p.name === preset.name; });
       if (i >= 0) list[i] = preset; else list.push(preset);
-      users[s].presets = list; return write(USERS, users);
+      return writePresets(list);
     },
     deletePreset: function (name) {
-      const s = read(SESSION, null); if (!s) return;
-      const users = read(USERS, {}); if (!users[s]) return;
-      users[s].presets = (users[s].presets || []).filter(function (p) { return p.name !== name; });
-      write(USERS, users);
+      if (!user) return;
+      writePresets(readPresets().filter(function (p) { return p.name !== name; }));
+    },
+
+    /* ----- usados só pelo firebase-auth.js ----- */
+    _connect: function (implementation) { impl = implementation; },
+    _setUser: function (u) {
+      user = u;
+      if (!Auth.isReady) { Auth.isReady = true; resolveReady(); }
+      notify();
+    },
+    _fail: function (msg) {
+      failure = msg;
+      if (!Auth.isReady) { Auth.isReady = true; resolveReady(); notify(); }
     }
   };
+
+  // Se o Firebase não responder em 10 s (sem internet, arquivo faltando), libera a página
+  setTimeout(function () { if (!Auth.isReady) Auth._fail("Não foi possível conectar ao serviço de login. Verifique sua internet."); }, 10000);
+
   window.InputLabAuth = Auth;
 })();

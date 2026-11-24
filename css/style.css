@@ -130,12 +130,6 @@ html.il-underline-links a:not(.btn):not(.nav-link):not(.navbar-brand) { text-dec
 .il-badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: .2rem .55rem; border-radius: 999px; border: 1px solid currentColor; }
 
 /* ---------- 6. Hero ---------- */
-.il-hero {
-  position: relative; overflow: hidden;
-  background:
-    radial-gradient(60% 80% at 0% 0%, color-mix(in srgb, var(--il-p1) 22%, transparent), transparent 70%),
-    radial-gradient(60% 80% at 100% 100%, color-mix(in srgb, var(--il-p2) 22%, transparent), transparent 70%);
-}
 .il-vs {
   font-weight: 900; font-size: .9rem; letter-spacing: .1em;
   background: var(--il-gold); color: #0F1117; border-radius: .4rem; padding: .1rem .5rem;
@@ -187,10 +181,9 @@ mark { background: var(--il-gold); color: #0F1117; padding: 0 .15em; border-radi
 
 /* ---------- 10. Lab (visualizador) ---------- */
 .il-stage {
-  background:
-    linear-gradient(var(--il-surface), var(--il-surface)) padding-box,
-    linear-gradient(135deg, var(--il-p1), var(--il-p2)) border-box;
-  border: 2px solid transparent; border-radius: 1.25rem;
+  background: var(--il-surface);
+  border: 1px solid var(--il-border);
+  border-radius: 1.25rem;
 }
 .il-history { max-height: 420px; overflow-y: auto; font-family: ui-monospace, monospace; }
 .il-history li {
@@ -264,3 +257,154 @@ html.il-reduce-motion *, html.il-reduce-motion *::before, html.il-reduce-motion 
 .il-btn-row .map-btn { font-size: .78rem; white-space: nowrap; max-width: 7.5rem; overflow: hidden; text-overflow: ellipsis; }
 .il-btn-row.is-selected { background: color-mix(in srgb, var(--il-gold) 10%, transparent); }
 .il-btn-row.is-mapping .map-btn { border-color: var(--il-gold); color: var(--il-gold); }
+
+/* ---------- 15. Controle: moldura e botões em contorno ---------- */
+/* Tampo interno (os botões ficam sobre ele). A carcaça externa continua sendo .body */
+.il-pad .plate { fill: #15181E; stroke: #2E3342; stroke-width: 2; }
+
+/* Estilo "contorno": miolo escuro, cor no anel, rótulo claro */
+.il-pad.outline .btn-shape { fill: #0B0D10; stroke: var(--c); stroke-width: 3.5; }
+.il-pad.outline .btn-label { fill: #ECEFF3; }
+/* Ao apertar, o botão "acende": o miolo ganha a cor e o rótulo troca para a cor legível */
+.il-pad.outline g.is-pressed .btn-shape { fill: var(--c); filter: none; }
+.il-pad.outline g.is-pressed .btn-label { fill: var(--lc); }
+/* Direções do leverless e do direcional do pad acendem em vermelho (P1) */
+.il-pad.outline .dir-shape.pressed { fill: var(--il-p1) !important; }
+
+/* ---------- 16. Pad em traço (line art) ---------- */
+.il-pad .pad2-body { fill: #1B1C20; stroke: #8A8F99; stroke-width: 4; stroke-linejoin: round; }
+.il-pad .pad2-part { fill: #1F2025; stroke: #6E737D; stroke-width: 3; }
+.il-pad .pad2-stick-well { fill: #26282D; stroke: #4A4D55; stroke-width: 2; }
+.il-pad .pad2-stick-outer { fill: #34363C; stroke: #A3A8B2; stroke-width: 4; }
+.il-pad .pad2-stick-inner { fill: #3C3F46; stroke: #6E737D; stroke-width: 2; transition: cx .04s, cy .04s; }
+.il-pad .dpad2 { fill: #34363C; stroke: #A3A8B2; stroke-width: 3; }
+.il-pad .dpad2-arrow { fill: #A3A8B2; pointer-events: none; }
+/* Gatilhos e bumpers: corpo cinza; acendem com a cor do botão */
+.il-pad .btn-shape.bump { fill: #34363C; stroke: #A3A8B2; stroke-width: 3; stroke-linejoin: round; }
+.il-pad g.is-pressed .btn-shape.bump { fill: var(--c); }
+/* Botões de face: círculo escuro, símbolo na cor do botão */
+.il-pad .btn-shape.face { fill: #2E3036; stroke: #4A4D55; stroke-width: 2; }
+.il-pad g.is-pressed .btn-shape.face { fill: var(--c); filter: none; }
+.il-pad .sym { fill: none; stroke: var(--c); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.il-pad g.is-pressed .sym { stroke: var(--lc); }
+.il-pad .btn-label.sym-text { fill: var(--c); font-weight: 600; }
+.il-pad g.is-pressed .btn-label.sym-text { fill: var(--lc); }
+.il-pad .btn-label.slot-label { fill: #C9CED8; font-weight: 700; }
+.il-pad g.is-pressed .btn-label.slot-label { fill: #C9CED8; }
+.il-pad .btn-label.bump-label { fill: #ECEFF3; }
+.il-pad g.is-pressed .btn-label.bump-label { fill: var(--lc); }
+
+/* ---------- 17. Cor de fundo dos botões e mapeamento de teclado ---------- */
+/* Fundo ("miolo") dos botões redondos no estilo contorno: vem da escolha do usuário.
+   Os :not() deixam de fora as peças do pad em traço (face e gatilhos). */
+.il-pad.outline .btn-shape:not(.face):not(.bump) { fill: var(--il-btn-fill, #0B0D10); }
+.il-pad.outline .btn-label:not(.sym-text):not(.bump-label) { fill: var(--il-btn-label, #ECEFF3); }
+.il-pad.outline g.is-pressed .btn-shape:not(.face):not(.bump) { fill: var(--c); }
+.il-pad.outline g.is-pressed .btn-label:not(.sym-text):not(.bump-label) { fill: var(--lc); }
+
+/* Lista de botões: cor · rótulo · controle · teclado · posição · remover */
+.il-btn-row { grid-template-columns: auto 2.2rem minmax(2.6rem, 1fr) auto auto auto auto; }
+.il-btn-row .map-btn { max-width: 5.2rem; padding-left: .35rem; padding-right: .35rem; }
+
+/* ---------- 17. Acabamento sem clichês ----------
+   Tira os padrões típicos de sites gerados por IA:
+   fonte genérica, cantos muito arredondados, desfoque no menu, cartões que
+   "pulam", ícones em quadradinhos, rótulo dourado em caixa alta e brilho neon.
+   Fontes locais em vendor/fonts (licença SIL Open Font License). */
+@font-face { font-family: "Barlow Condensed"; font-weight: 600; font-display: swap; src: url("../vendor/fonts/barlow-condensed-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 800; font-display: swap; src: url("../vendor/fonts/barlow-condensed-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 600; font-display: swap; src: url("../vendor/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; font-display: swap; src: url("../vendor/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
+
+:root {
+  --il-font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --il-font-title: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --il-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --il-radius: 2px;
+  --bs-body-font-family: var(--il-font-body);
+  --bs-border-radius: var(--il-radius);
+  --bs-border-radius-sm: var(--il-radius);
+  --bs-border-radius-lg: var(--il-radius);
+}
+
+/* Tipografia: condensada nos títulos (placar de jogo), mono nos números */
+body { font-family: var(--il-font-body); }
+h1, h2, h3, .h1, .h2, .h3, .h4, .h5, .h6, .il-display, .il-navbar .navbar-brand { font-family: var(--il-font-title); font-weight: 800; letter-spacing: .01em; }
+.il-display { line-height: 1; letter-spacing: 0; }
+.il-numpad, .il-kbd, .il-history, .il-btn-chip, .il-motion-toast, .il-badge { font-family: var(--il-font-mono); }
+.il-footer h2 { font-family: var(--il-font-mono); font-size: .8rem !important; font-weight: 500; color: var(--il-muted); }
+
+/* Rótulo acima dos títulos: etiqueta discreta, sem caixa alta espaçada */
+.il-kicker { text-transform: none; letter-spacing: 0; font-family: var(--il-font-mono); font-weight: 500; font-size: .8rem; color: var(--il-muted); display: flex; align-items: center; gap: .5rem; }
+.il-kicker::before { content: ""; width: .55rem; height: .55rem; background: var(--il-gold); flex: none; }
+
+/* Menu sólido, sem desfoque */
+.il-navbar { background: var(--il-bg); backdrop-filter: none; }
+.il-navbar .nav-link.active { box-shadow: inset 0 -2px 0 var(--il-p1); }
+
+/* Botões: cantos retos; ao passar o mouse, invertem (sem "brilho") */
+.btn { border-radius: var(--il-radius); }
+.btn-il-p1, .btn-il-p2 { font-family: var(--il-font-title); font-weight: 600; letter-spacing: .02em; }
+.btn-lg.btn-il-p1, .btn-lg.btn-il-p2, .btn-lg.btn-il-ghost { font-family: var(--il-font-title); font-weight: 600; font-size: 1.3rem; }
+.btn-il-p1:hover, .btn-il-p2:hover { filter: none; background: var(--il-text); color: var(--il-bg); }
+
+/* Cartões: sem pular, sem quadradinho de ícone, cantos retos */
+.il-card { border-radius: var(--il-radius); transition: none; }
+.il-card:hover { border-color: var(--il-border); }
+.il-card.il-card-hover:hover { transform: none; border-color: var(--il-muted); }
+.il-card .il-icon { width: auto; height: auto; background: none; display: inline-block; }
+.il-badge { border-radius: var(--il-radius); font-weight: 500; }
+
+/* Cartões encostados, separados por linhas finas, com número "01" */
+.il-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); border: 1px solid var(--il-border); background: var(--il-border); gap: 1px; }
+.il-grid > * { background: var(--il-surface); padding: 1.5rem; }
+.il-index { font-family: var(--il-font-mono); font-size: .8rem; color: var(--il-muted); }
+.il-seq { font-family: var(--il-font-mono); font-size: 1.6rem; font-weight: 500; letter-spacing: .05em; }
+.il-numpad.big { grid-template-columns: repeat(3, 3.2rem); }
+.il-numpad.big span { height: 3.2rem; font-size: 1.2rem; }
+
+/* Cantos retos no resto */
+.skip-link, .il-numpad span, .il-kbd, .il-btn-chip, mark, .il-carousel, .il-stage,
+.form-control, .form-select, .alert, .dropdown-menu, .offcanvas, .input-group-text { border-radius: var(--il-radius); }
+.il-carousel .carousel-control-prev-icon, .il-carousel .carousel-control-next-icon { border-radius: var(--il-radius); }
+.il-carousel .carousel-indicators [data-bs-target] { border-radius: 0; height: 4px; }
+
+/* Botão de acessibilidade: quadrado, sem sombra */
+.il-a11y-fab { border-radius: var(--il-radius); box-shadow: none; width: 3.2rem; height: 3.2rem; }
+
+/* Botão apertado: acende sem brilho neon */
+.il-pad .btn-shape.pressed { filter: brightness(1.15); }
+
+/* ---------- 18. Arcade e leverless no estilo Trailpad ----------
+   Base transparente por padrão (ou na cor escolhida no Lab), borda dupla,
+   parafusos, gate com setas, manche com rastro e botões estilo Sanwa
+   (anel preto + aro na cor do botão + miolo). Inspirado no Trailpad (CC0). */
+.il-pad .body.base { stroke: rgba(150, 156, 168, .55); stroke-width: 3; }
+.il-pad .base-rim { fill: none; stroke: rgba(255, 255, 255, .07); stroke-width: 8; }
+[data-bs-theme="light"] .il-pad .base-rim { stroke: rgba(0, 0, 0, .06); }
+.il-pad .screw { fill: #9AA0AA; stroke: #383838; stroke-width: 2; }
+.il-pad .fn-btn { fill: #2A2D33; stroke: #0B0B0B; stroke-width: 4; }
+.il-pad .gate { fill: rgba(0, 0, 0, .45); stroke: #000; stroke-width: 4; }
+.il-pad .gate-rim { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 6; }
+.il-pad .gate-hole { fill: rgba(0, 0, 0, .5); stroke: rgba(255, 255, 255, .1); stroke-width: 3; }
+.il-pad .gate-arrow { fill: #C9CED8; stroke: #0B0B0B; stroke-width: 1.5; }
+.il-pad .stick-shaft { stroke: #5A5F69; stroke-width: 12; stroke-linecap: round; }
+.il-pad .stick-ball { stroke: #0B0B0B; stroke-width: 3; }
+.il-pad .stick-trail line { stroke: var(--il-gold); stroke-width: 10; stroke-linecap: round; }
+.il-pad .btn-ring { fill: #0B0B0B; }
+.il-pad .btn-gloss { fill: none; stroke: rgba(255, 255, 255, .12); stroke-width: 2; pointer-events: none; }
+
+/* ---------- 19. Pad com os desenhos do Trailpad (CC0) ---------- */
+/* Gatilhos e bumpers acendem na cor do botão */
+.il-pad g.is-pressed > svg .tp-shape { fill: var(--c); }
+/* Direcional acende em vermelho (P1) */
+.il-pad g.is-pressed > svg.tp-dir .tp-shape { fill: var(--il-p1); }
+/* Botões de face: círculo cinza; ao apertar, ganha a cor do botão */
+.il-pad .btn-shape.tp-face-bg { fill: #333333; stroke: none; }
+.il-pad g.is-pressed .btn-shape.tp-face-bg { fill: var(--c); }
+.il-pad g.is-pressed .tp-sym path, .il-pad g.is-pressed .tp-sym circle, .il-pad g.is-pressed .tp-sym rect { stroke: var(--lc); }
+.il-pad .btn-label.tp-letter { fill: #D5D8DE; font-weight: 600; font-family: var(--il-font-body, sans-serif); }
+.il-pad g.is-pressed .btn-label.tp-letter { fill: var(--lc); }
+.il-pad .tp-sym { pointer-events: none; }

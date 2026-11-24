@@ -26,14 +26,20 @@
   const TOP_PHYS = ["X", "Y", "RB", "LB"], BOT_PHYS = ["A", "B", "RT", "LT"];
   // Teclado (posição física; no ABNT2 a tecla depois do L é o Ç)
   const TOP_KEYS = ["KeyU", "KeyI", "KeyO", "KeyP"], BOT_KEYS = ["KeyJ", "KeyK", "KeyL", "Semicolon"];
-  const DIR_KEYS = { KeyW: "up", ArrowUp: "up", KeyS: "down", ArrowDown: "down", KeyA: "left", ArrowLeft: "left", KeyD: "right", ArrowRight: "right" };
+  const ARROW_KEYS = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+  /** Direção de uma tecla: primeiro as teclas escolhidas pelo usuário, depois as setas. */
+  function dirOfKey(cfg, code) {
+    const k = cfg && cfg.dirKeys ? cfg.dirKeys : {};
+    for (const d in k) if (k[d] === code) return d;
+    return ARROW_KEYS[code] || null;
+  }
 
   /* ---------- Presets por jogo (sugestões editáveis) ---------- */
   const GAME_PRESETS = {
-    generic8: { name: "Genérico — 8 botões",
+    generic8: { name: "Genérico, 8 botões",
       top: [["LP", "#3DB8FF"], ["MP", "#3DB8FF"], ["HP", "#3DB8FF"], ["PPP", "#FFC53D"]],
       bot: [["LK", "#FF5A4E"], ["MK", "#FF5A4E"], ["HK", "#FF5A4E"], ["KKK", "#FFC53D"]] },
-    generic6: { name: "Genérico — 6 botões",
+    generic6: { name: "Genérico, 6 botões",
       top: [["LP", "#3DB8FF"], ["MP", "#3DB8FF"], ["HP", "#3DB8FF"]],
       bot: [["LK", "#FF5A4E"], ["MK", "#FF5A4E"], ["HK", "#FF5A4E"]] },
     sf6: { name: "Street Fighter 6 (Clássico)",
@@ -58,7 +64,7 @@
   /* ---------- Geometria padrão ---------- */
   // Curva "Vewlix": primeira coluna mais baixa, como nos gabinetes de arcade
   function gridPos(layout, row, col) {
-    const g = layout === "stick" ? { ox: 345, oy: 150, step: 76, offs: [16, -4, -4, 6], dy: 82 }
+    const g = layout === "stick" ? { ox: 330, oy: 136, step: 88, offs: [24, 0, 0, 0], dy: 76 }
                                  : { ox: 385, oy: 140, step: 74, offs: [10, -6, -6, 2], dy: 80 };
     return { x: g.ox + col * g.step, y: g.oy + (g.offs[col] || 0) + row * g.dy };
   }
@@ -68,7 +74,7 @@
     [["t", preset.top, TOP_PHYS, TOP_KEYS, 0], ["b", preset.bot, BOT_PHYS, BOT_KEYS, 1]].forEach(function (r) {
       r[1].forEach(function (b, i) {
         const p = gridPos(layout, r[4], i);
-        out.push({ id: r[0] + i, label: b[0], color: b[1], x: p.x, y: p.y, r: layout === "stick" ? 31 : 30, gp: r[2][i], key: r[3][i] });
+        out.push({ id: r[0] + i, label: b[0], color: b[1], x: p.x, y: p.y, r: layout === "stick" ? 33 : 30, gp: r[2][i], key: r[3][i] });
       });
     });
     return out;
@@ -96,9 +102,10 @@
 
   function defaultConfig() {
     return applyPreset({
-      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8",
+      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8", buttonStyle: "outline", buttonFill: "#0B0D10", baseColor: null, baseColorPick: "#242836", trail: true, dirSource: "both", stickLayout2: true,
+      dirKeys: { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD" },
       stick: { buttons: [] },
-      leverless: { buttons: [], dirs: { left: { x: 82, y: 172 }, down: { x: 152, y: 152 }, right: { x: 222, y: 168 }, up: { x: 318, y: 290 } } },
+      leverless: { buttons: [], dirs: { left: { x: 82, y: 172 }, down: { x: 152, y: 152 }, right: { x: 222, y: 168 }, up: { x: 318, y: 276 } } },
       pad: { style: "xbox", slots: [] }
     }, "generic8");
   }
@@ -109,12 +116,22 @@
     if (!c || c.version !== 2) return d;
     try {
       const out = JSON.parse(JSON.stringify(c));
-      ["notation", "side", "history", "layout", "preset"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
+      ["notation", "side", "history", "layout", "preset", "buttonStyle", "buttonFill", "baseColor", "baseColorPick", "trail", "dirSource"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
+      out.dirKeys = Object.assign({}, d.dirKeys, out.dirKeys || {});
       if (["stick", "leverless", "pad"].indexOf(out.layout) < 0) out.layout = "stick";
       out.stick = out.stick && Array.isArray(out.stick.buttons) ? out.stick : d.stick;
       out.leverless = out.leverless && Array.isArray(out.leverless.buttons) ? out.leverless : d.leverless;
       out.leverless.dirs = out.leverless.dirs || d.leverless.dirs;
       out.pad = out.pad && Array.isArray(out.pad.slots) ? out.pad : d.pad;
+      // Configurações salvas antes do novo arcade: reposiciona os 8 botões padrão
+      if (!out.stickLayout2) {
+        out.stick.buttons.forEach(function (b) {
+          const m = /^([tb])([0-3])$/.exec(b.id); if (!m) return;
+          const pos = gridPos("stick", m[1] === "t" ? 0 : 1, +m[2]);
+          b.x = pos.x; b.y = pos.y; b.r = 33;
+        });
+        out.stickLayout2 = true;
+      }
       return out;
     } catch (e) { return d; }
   }
@@ -155,9 +172,19 @@
 
   /* ---------- Descrição de um input (para a interface) ---------- */
   function keyName(code) {
-    if (code === "Semicolon") return "Ç";
+    const NOMES = { Semicolon: "Ç", Space: "Espaço", Enter: "Enter", Backspace: "⌫", Tab: "Tab",
+      ShiftLeft: "Shift", ShiftRight: "Shift dir.", ControlLeft: "Ctrl", ControlRight: "Ctrl dir.",
+      AltLeft: "Alt", AltRight: "AltGr", Comma: ",", Period: ".", Minus: "-", Equal: "=" };
+    if (NOMES[code]) return NOMES[code];
     return code.replace(/^Key/, "").replace(/^Digit/, "").replace(/^Numpad/, "Num ").replace(/^Arrow/, "Seta ");
   }
+  function describeGp(b, style) {
+    if (b.gp == null) return "—";
+    if (typeof b.gp === "string") return (PHYS_NAMES[style] || PHYS_NAMES.xbox)[b.gp] || b.gp;
+    if (typeof b.gp === "number") return "Botão " + b.gp;
+    return "Eixo " + b.gp.a + (b.gp.s < 0 ? "−" : "+");
+  }
+  function describeKey(code) { return code ? keyName(code) : "—"; }
   function describeInput(b, style) {
     const parts = [];
     if (b.gp != null) {
@@ -167,6 +194,21 @@
     }
     if (b.key) parts.push(keyName(b.key));
     return parts.length ? parts.join(" · ") : "Sem mapa";
+  }
+
+  /**
+   * Converte o botão capturado (número ou eixo, que mudam de navegador para navegador)
+   * no nome físico do botão ("X", "RT"...). Assim o mapeamento feito no Zen/Firefox
+   * continua certo no OBS (Chromium), e vice-versa. Se não reconhecer, mantém o número.
+   */
+  function portableGp(spec, mapping) {
+    const table = mapping === "standard" ? STD : RAW;
+    for (const name in table) {
+      const v = table[name];
+      if (typeof spec === "number" && v === spec) return name;
+      if (spec && typeof spec === "object" && v && typeof v === "object" && v.a === spec.a && (v.s || 1) === (spec.s || 1)) return name;
+    }
+    return spec;
   }
 
   /* ---------------- Leitura de inputs ---------------- */
@@ -183,14 +225,17 @@
     }
     window.addEventListener("keydown", function (e) {
       if (capture) {
+        if (e.code === "Escape") { e.preventDefault(); const cb0 = capture.cb; capture = null; cb0(null); return; }
+        if (capture.mode === "gp") return;                 // esperando o controle: ignora o teclado
         e.preventDefault();
         const cb = capture.cb; capture = null;
-        cb(e.code === "Escape" ? null : { key: e.code });
+        cb({ key: e.code });
         return;
       }
       if (isTyping(e)) return;
       keys.add(e.code); tapped.add(e.code);
-      if (DIR_KEYS[e.code] && e.code.indexOf("Arrow") === 0) e.preventDefault();   // não rolar a página
+      // setas e espaço não rolam a página enquanto estiverem sendo usados como controle
+      if (e.code.indexOf("Arrow") === 0 || (e.code === "Space" && isMapped(e.code))) e.preventDefault();
     });
     window.addEventListener("keyup", function (e) { keys.delete(e.code); });
     window.addEventListener("blur", function () { keys.clear(); });
@@ -216,15 +261,20 @@
       return v != null && (spec.s || 1) * (v - spec.t) > 0;
     }
 
+    function isMapped(code) {
+      const cfg = getConfig();
+      return !!dirOfKey(cfg, code) || activeButtons(cfg).some(function (b) { return b.key === code; });
+    }
+
     function tickCapture(pad) {
-      if (!capture || !pad) return;
+      if (!capture || !pad || capture.mode === "key") return;
       const anyDown = pad.buttons.some(btnDown);
       if (!capture.armed) {           // espera soltar tudo antes de capturar
         if (!anyDown) { capture.armed = true; capture.baseline = pad.axes.slice(); }
         return;
       }
       for (let i = 0; i < pad.buttons.length; i++) {
-        if (btnDown(pad.buttons[i])) { const cb = capture.cb; capture = null; cb({ gp: i }); return; }
+        if (btnDown(pad.buttons[i])) { const cb = capture.cb; capture = null; cb({ gp: i, mapping: pad.mapping }); return; }
       }
       // Eixos (gatilhos analógicos). Ignora o analógico esquerdo (0,1) e o hat (6,7).
       for (let a = 2; a < pad.axes.length; a++) {
@@ -234,7 +284,7 @@
           // limiar = meio do caminho entre o repouso e o valor apertado
           const t = +((capture.baseline[a] + pad.axes[a]) / 2).toFixed(2);
           const cb = capture.cb; capture = null;
-          cb({ gp: { a: a, t: t, s: delta > 0 ? 1 : -1 } });
+          cb({ gp: { a: a, t: t, s: delta > 0 ? 1 : -1 }, mapping: pad.mapping });
           return;
         }
       }
@@ -242,34 +292,49 @@
 
     return {
       onConnection: function (fn) { onConnection = fn; },
-      startCapture: function (cb) { capture = { cb: cb, armed: false, baseline: [] }; },
+      startCapture: function (cb, mode) { capture = { cb: cb, mode: mode || "any", armed: false, baseline: [] }; },
       cancelCapture: function () { capture = null; },
       isCapturing: function () { return !!capture; },
       read: function () {
         const cfg = getConfig();
-        const dirs = { up: false, down: false, left: false, right: false };
+        const none = function () { return { up: false, down: false, left: false, right: false }; };
+        const kbd = none(), dpad = none(), stick = none();
         const held = new Set(keys); tapped.forEach(function (k) { held.add(k); }); tapped.clear();
-        held.forEach(function (k) { if (DIR_KEYS[k]) dirs[DIR_KEYS[k]] = true; });
+        held.forEach(function (k) { const d = dirOfKey(cfg, k); if (d) kbd[d] = true; });
         const p = currentPad();
         tickCapture(p);
         const buttons = new Set();
+        let axes = { x: 0, y: 0 };
         if (p) {
+          // D-pad (direcional digital)
           if (p.mapping === "standard") {
-            if (btnDown(p.buttons[12])) dirs.up = true;
-            if (btnDown(p.buttons[13])) dirs.down = true;
-            if (btnDown(p.buttons[14])) dirs.left = true;
-            if (btnDown(p.buttons[15])) dirs.right = true;
-          } else if (p.axes.length >= 8) {   // direcional como "hat" (eixos 6/7)
+            if (btnDown(p.buttons[12])) dpad.up = true;
+            if (btnDown(p.buttons[13])) dpad.down = true;
+            if (btnDown(p.buttons[14])) dpad.left = true;
+            if (btnDown(p.buttons[15])) dpad.right = true;
+          } else if (p.axes.length >= 8) {   // alguns drivers entregam o D-pad como "hat" (eixos 6/7)
             const h = N.axesToDirections(p.axes[6], p.axes[7], 0.5);
-            Object.keys(h).forEach(function (k) { if (h[k]) dirs[k] = true; });
+            Object.keys(h).forEach(function (k) { if (h[k]) dpad[k] = true; });
           }
-          const a = N.axesToDirections(p.axes[0] || 0, p.axes[1] || 0, 0.5);
-          Object.keys(a).forEach(function (k) { if (a[k]) dirs[k] = true; });
+          // Analógico esquerdo (eixos 0/1), com zona morta
+          axes = { x: p.axes[0] || 0, y: p.axes[1] || 0 };
+          const a = N.axesToDirections(axes.x, axes.y, 0.5);
+          Object.keys(a).forEach(function (k) { if (a[k]) stick[k] = true; });
         }
+        // Qual fonte vale para a notação: as duas (padrão), só o D-pad ou só o analógico.
+        // O teclado sempre vale (ele não tem analógico).
+        const src = cfg.dirSource || "both";
+        const dirs = none();
+        Object.keys(dirs).forEach(function (k) {
+          dirs[k] = kbd[k] || (src !== "stick" && dpad[k]) || (src !== "dpad" && stick[k]);
+        });
+        const dpadShown = none();
+        Object.keys(dpadShown).forEach(function (k) { dpadShown[k] = kbd[k] || (src !== "stick" && dpad[k]); });
+        if (src === "dpad") axes = { x: 0, y: 0 };
         activeButtons(cfg).forEach(function (b) {
           if ((b.key && held.has(b.key)) || gpPressed(p, b.gp)) buttons.add(b.id);
         });
-        return { dirs: dirs, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
+        return { dirs: dirs, dpad: dpadShown, stick: stick, axes: axes, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
       }
     };
   }
@@ -292,40 +357,89 @@
     return Math.max(10, Math.min(r * 0.62, (r * 1.7) / Math.max(1, n * 0.62)));
   }
 
+  /** Variáveis CSS do botão: --c (cor do botão) e --lc (rótulo legível sobre essa cor). */
+  function colorVars(color) { return "--c:" + color + ";--lc:" + labelColor(color); }
+
+  /** Moldura do controle: carcaça externa + tampo interno (onde ficam os botões). */
+  function frame(svg, rx, cfg) {
+    const base = el("rect", { x: 10, y: 30, width: 700, height: 300, rx: rx, class: "body base" }, svg);
+    base.style.fill = cfg && cfg.baseColor ? cfg.baseColor : "transparent";   // transparente por padrão (bom para o OBS)
+    el("rect", { x: 17, y: 37, width: 686, height: 286, rx: Math.max(6, rx - 6), class: "base-rim" }, svg);
+    [[34, 54], [360, 54], [686, 54], [34, 180], [686, 180], [34, 306], [360, 306], [686, 306]].forEach(function (p) {
+      el("circle", { cx: p[0], cy: p[1], r: 5, class: "screw" }, svg);
+    });
+  }
+
   /** Botão redondo (arcade/leverless) dentro de um <g> posicionado por translate. */
   function roundButton(parent, b, opts) {
-    const g = el("g", { transform: "translate(" + b.x + " " + b.y + ")", "data-id": b.id, color: b.color }, parent);
+    const g = el("g", { transform: "translate(" + b.x + " " + b.y + ")", "data-id": b.id, color: b.color, style: colorVars(b.color) }, parent);
     if (opts.editable) g.classList.add("editable");
     if (opts.selectedId === b.id) g.classList.add("selected");
+    el("circle", { r: (b.r || 30) + 5, class: "btn-ring" }, g);                 // anel preto externo
     const c = el("circle", { r: b.r || 30, fill: b.color, class: "btn-shape" }, g);
+    el("circle", { r: Math.max(6, (b.r || 30) - 7), class: "btn-gloss" }, g);   // reflexo do miolo
     text(g, 0, 1, b.label, labelColor(b.color), fitSize(b.label, b.r || 30));
     return { g: g, shape: c };
   }
 
   function drawStick(svg, cfg, refs, opts) {
-    el("rect", { x: 10, y: 30, width: 700, height: 300, rx: 36, class: "body" }, svg);
-    // parafusos decorativos do tampo
-    [[34, 54], [686, 54], [34, 306], [686, 306]].forEach(function (p) { el("circle", { cx: p[0], cy: p[1], r: 5, class: "screw" }, svg); });
-    el("circle", { cx: 165, cy: 190, r: 80, class: "stick-gate" }, svg);
-    for (let i = 0; i < 8; i++) {
-      const ang = i * Math.PI / 4;
-      el("circle", { cx: 165 + Math.cos(ang) * 64, cy: 190 + Math.sin(ang) * 64, r: 3, fill: "currentColor", opacity: .35 }, svg);
-    }
-    const shaft = el("line", { x1: 165, y1: 190, x2: 165, y2: 190, stroke: "#8a90a2", "stroke-width": 10, "stroke-linecap": "round" }, svg);
-    const ball = el("circle", { cx: 165, cy: 190, r: 34, fill: "#FF5A4E", stroke: "#0F1117", "stroke-width": 3 }, svg);
-    el("circle", { cx: 155, cy: 180, r: 9, fill: "#fff", opacity: .25 }, svg);   // brilho
+    frame(svg, 30, cfg);
+    const CX = 165, CY = 184, REACH = 40;
+    // Botões pequenos de função (decorativos), como no arcade do Trailpad
+    [540, 572, 604, 636].forEach(function (x) { el("circle", { cx: x, cy: 66, r: 11, class: "fn-btn" }, svg); });
+    // Gate: área escura, aro e furo central
+    el("circle", { cx: CX, cy: CY, r: 66, class: "gate" }, svg);
+    el("circle", { cx: CX, cy: CY, r: 61, class: "gate-rim" }, svg);
+    el("circle", { cx: CX, cy: CY, r: 15, class: "gate-hole" }, svg);
+    // Setinhas das 4 direções: acendem junto com o manche
+    [["up", 0, -1], ["down", 0, 1], ["left", -1, 0], ["right", 1, 0]].forEach(function (d) {
+      const tx = CX + d[1] * 80, ty = CY + d[2] * 80;
+      const pts = [[tx + d[1] * 7, ty + d[2] * 7], [tx - d[2] * 7 - d[1] * 4, ty + d[1] * 7 - d[2] * 4], [tx + d[2] * 7 - d[1] * 4, ty - d[1] * 7 - d[2] * 4]];
+      refs.dir[d[0]] = el("path", { d: "M" + pts.join(" L") + " Z", class: "dir-shape gate-arrow" }, svg);
+    });
+    // Rastro: segmentos que vão sumindo (estilo Trailpad)
+    const SEGS = 22, trailG = el("g", { class: "stick-trail" }, svg), segs = [];
+    for (let i = 0; i < SEGS; i++) segs.push(el("line", { x1: CX, y1: CY, x2: CX, y2: CY, "stroke-opacity": 0 }, trailG));
+    // Haste e bola com brilho (gradiente radial na cor da bola)
+    const ballColor = cfg.stick.ballColor || "#FF5A4E";
+    const gid = "ballGrad" + Math.random().toString(36).slice(2, 7);
+    const defs = el("defs", {}, svg), grad = el("radialGradient", { id: gid, cx: "40%", cy: "32%", r: "70%" }, defs);
+    el("stop", { offset: "0%", "stop-color": "#FFFFFF", "stop-opacity": .55 }, grad);
+    el("stop", { offset: "35%", "stop-color": ballColor }, grad);
+    el("stop", { offset: "100%", "stop-color": ballColor, "stop-opacity": 1 }, grad);
+    const shaft = el("line", { x1: CX, y1: CY, x2: CX, y2: CY, class: "stick-shaft" }, svg);
+    const ball = el("circle", { cx: CX, cy: CY, r: 36, fill: "url(#" + gid + ")", class: "stick-ball" }, svg);
     cfg.stick.buttons.forEach(function (b) { refs.btn[b.id] = roundButton(svg, b, opts).shape; });
+
+    let cx = CX, cy = CY;
+    const pts = [];
+    const reduce = function () {
+      return document.documentElement.classList.contains("il-reduce-motion") ||
+        (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    };
     return function (dirs) {
       const h = (dirs.right ? 1 : 0) - (dirs.left ? 1 : 0), v = dirs.up ? -1 : (dirs.down ? 1 : 0);
-      const k = (h && v) ? 0.72 : 1, x = 165 + h * 46 * k, y = 190 + v * 46 * k;
-      ball.setAttribute("cx", x); ball.setAttribute("cy", y);
-      shaft.setAttribute("x2", x); shaft.setAttribute("y2", y);
-      ball.nextSibling.setAttribute("cx", x - 10); ball.nextSibling.setAttribute("cy", y - 10);
+      const k = (h && v) ? 0.72 : 1, tx = CX + h * REACH * k, ty = CY + v * REACH * k;
+      const calm = reduce();
+      // Animação: a bola desliza até a direção (sem animação se "reduzir animações" estiver ligado)
+      if (calm) { cx = tx; cy = ty; } else { cx += (tx - cx) * 0.45; cy += (ty - cy) * 0.45; }
+      ball.setAttribute("cx", cx.toFixed(1)); ball.setAttribute("cy", cy.toFixed(1));
+      shaft.setAttribute("x2", cx.toFixed(1)); shaft.setAttribute("y2", cy.toFixed(1));
+      // Rastro dos últimos ~22 quadros
+      const show = cfg.trail !== false && !calm;
+      pts.push([cx, cy]); while (pts.length > SEGS + 1) pts.shift();
+      for (let i = 0; i < SEGS; i++) {
+        const a = pts[i], b = pts[i + 1];
+        if (!show || !a || !b) { segs[i].setAttribute("stroke-opacity", 0); continue; }
+        segs[i].setAttribute("x1", a[0]); segs[i].setAttribute("y1", a[1]);
+        segs[i].setAttribute("x2", b[0]); segs[i].setAttribute("y2", b[1]);
+        segs[i].setAttribute("stroke-opacity", ((i + 1) / SEGS * 0.8).toFixed(2));
+      }
     };
   }
 
   function drawLeverless(svg, cfg, refs, opts) {
-    el("rect", { x: 10, y: 30, width: 700, height: 300, rx: 24, class: "body" }, svg);
+    frame(svg, 24, cfg);
     const arrows = { left: "←", down: "↓", right: "→", up: "↑" };
     Object.keys(arrows).forEach(function (d) {
       const p = cfg.leverless.dirs[d];
@@ -338,78 +452,168 @@
     return null;
   }
 
-  /* Pad realista: corpo com pegadas, gatilhos, bumpers, dois analógicos,
-     direcional em cruz e botões de face (estilo Xbox ou PlayStation). */
-  function drawPad(svg, cfg, refs) {
-    const style = cfg.pad.style === "ps" ? "ps" : "xbox";
+  /* Pad em traço (line art): corpo escuro com contorno cinza, gatilhos empilhados,
+     direcional em 4 teclas, analógicos com anel duplo e botões de face com o
+     símbolo do controle (PlayStation: △ ○ ✕ □ · Xbox: Y B A X).
+     O símbolo usa a cor do botão; o rótulo do jogo (LP, MK...) aparece só no histórico. */
+  const PS_SYMBOL = {
+    Y: function (g) { el("path", { d: "M0 -9 L9 6 L-9 6 Z", class: "sym" }, g); },
+    B: function (g) { el("circle", { r: 8, class: "sym" }, g); },
+    A: function (g) { el("path", { d: "M-7 -7 L7 7 M7 -7 L-7 7", class: "sym" }, g); },
+    X: function (g) { el("rect", { x: -7, y: -7, width: 14, height: 14, class: "sym" }, g); }
+  };
+
+  function drawPadLine(svg, cfg, refs) {
+    const ps = cfg.pad.style === "ps";
     const slot = {}; cfg.pad.slots.forEach(function (s) { slot[s.phys] = s; });
-    const names = PHYS_NAMES[style];
-    const fillOf = function (s) { return s && s.label !== "" ? s.color : UNUSED; };
-    const labelOf = function (s, phys) { return s && s.label !== "" ? s.label : names[phys]; };
+    const names = PHYS_NAMES[ps ? "ps" : "xbox"];
+    const colorOf = function (s) { return s && s.label !== "" ? s.color : UNUSED; };
 
-    // Gatilhos (atrás) e bumpers
-    [["LT", 150, 6], ["RT", 480, 6]].forEach(function (t) {
-      const s = slot[t[0]], g = el("g", { color: fillOf(s) }, svg);
-      refs.btn[t[0]] = el("rect", { x: t[1], y: t[2], width: 90, height: 46, rx: 12, fill: fillOf(s), class: "btn-shape" }, g);
-      text(g, t[1] + 45, t[2] + 18, labelOf(s, t[0]), labelColor(fillOf(s)), 14);
-    });
-    // Corpo
-    el("path", { class: "body pad-body", d:
-      "M190 66 C260 56 460 56 530 66 C600 76 642 108 662 168 C690 250 702 322 650 337 " +
-      "C610 348 582 312 552 272 C522 238 198 238 168 272 C138 312 110 348 70 337 " +
-      "C18 322 30 250 58 168 C78 108 120 76 190 66 Z" }, svg);
+    /* Gatilhos (L2/R2 ou LT/RT) e bumpers (L1/R1 ou LB/RB), empilhados como no controle real */
+    const shoulder = function (id, d, tx, ty) {
+      const s = slot[id], color = colorOf(s);
+      const g = el("g", { color: color, style: colorVars(color) }, svg);
+      refs.btn[id] = el("path", { d: d, class: "btn-shape bump" }, g);
+      text(g, tx, ty, names[id], "#ECEFF3", 12).classList.add("bump-label");   // nome físico (L2, RB...)
+    };
+    shoulder("LT", "M128 40 C126 18 140 4 168 2 C196 0 212 10 220 34 L220 42 L128 46 Z", 174, 24);
+    shoulder("RT", "M592 40 C594 18 580 4 552 2 C524 0 508 10 500 34 L500 42 L592 46 Z", 546, 24);
+    shoulder("LB", "M100 76 C100 56 116 44 148 42 L228 40 C238 40 242 48 240 58 L238 64 Z", 172, 54);
+    shoulder("RB", "M620 76 C620 56 604 44 572 42 L492 40 C482 40 478 48 480 58 L482 64 Z", 548, 54);
 
-    [["LB", 112, 50, "M108 78 Q114 48 150 46 L250 46 Q262 46 262 58 L262 66 Z"], ["RB", 462, 50, "M612 78 Q606 48 570 46 L470 46 Q458 46 458 58 L458 66 Z"]].forEach(function (b) {
-      const s = slot[b[0]], g = el("g", { color: fillOf(s) }, svg);
-      refs.btn[b[0]] = el("path", { d: b[3], fill: fillOf(s), class: "btn-shape" }, g);
-      text(g, b[0] === "LB" ? 196 : 524, 58, labelOf(s, b[0]), labelColor(fillOf(s)), 13);
-    });
+    /* Corpo */
+    el("path", { class: "pad2-body", d:
+      "M150 74 C220 62 500 62 570 74 C632 84 664 124 678 192 C694 272 686 330 646 340 " +
+      "C612 348 588 322 566 294 C550 300 528 306 500 306 L220 306 C192 306 170 300 154 294 " +
+      "C132 322 108 348 74 340 C34 330 26 272 42 192 C56 124 88 84 150 74 Z" }, svg);
 
-    const pos = style === "xbox"
-      ? { ls: [215, 150], dpad: [285, 226], rs: [435, 226] }
-      : { ls: [288, 232], dpad: [205, 152], rs: [432, 232] };
+    const pos = ps
+      ? { dpad: [168, 166], face: [552, 166], ls: [290, 246], rs: [430, 246] }
+      : { dpad: [272, 248], face: [552, 160], ls: [176, 162], rs: [448, 248] };
 
-    // Analógicos
+    /* Centro do controle */
+    if (ps) {
+      el("path", { class: "pad2-part", d: "M252 76 L468 76 L456 166 Q452 182 436 182 L284 182 Q268 182 264 166 Z" }, svg);
+      el("rect", { x: 226, y: 92, width: 12, height: 26, rx: 6, class: "pad2-part" }, svg);
+      el("rect", { x: 482, y: 92, width: 12, height: 26, rx: 6, class: "pad2-part" }, svg);
+      el("circle", { cx: 360, cy: 240, r: 9, class: "pad2-part" }, svg);
+    } else {
+      el("circle", { cx: 360, cy: 108, r: 15, class: "pad2-part" }, svg);
+      el("circle", { cx: 318, cy: 160, r: 11, class: "pad2-part" }, svg);
+      el("circle", { cx: 402, cy: 160, r: 11, class: "pad2-part" }, svg);
+    }
+
+    /* Analógicos: anel externo + topo (o esquerdo se move com as direções) */
     let leftCap = null;
     [["ls", pos.ls], ["rs", pos.rs]].forEach(function (s) {
-      el("circle", { cx: s[1][0], cy: s[1][1], r: 36, class: "stick-well" }, svg);
-      const cap = el("circle", { cx: s[1][0], cy: s[1][1], r: 25, class: "stick-cap" }, svg);
+      el("circle", { cx: s[1][0], cy: s[1][1], r: 40, class: "pad2-stick-well" }, svg);
+      el("circle", { cx: s[1][0], cy: s[1][1], r: 31, class: "pad2-stick-outer" }, svg);
+      const cap = el("circle", { cx: s[1][0], cy: s[1][1], r: 21, class: "pad2-stick-inner" }, svg);
       if (s[0] === "ls") leftCap = cap;
     });
 
-    // Direcional em cruz
+    /* Direcional: 4 teclas separadas, cada uma com uma setinha */
     const cx = pos.dpad[0], cy = pos.dpad[1];
-    el("circle", { cx: cx, cy: cy, r: 46, class: "dpad-well" }, svg);
-    el("rect", { x: cx - 13, y: cy - 13, width: 26, height: 26, class: "dpad-center" }, svg);
-    [["up", cx - 13, cy - 41, 26, 30], ["down", cx - 13, cy + 11, 26, 30], ["left", cx - 41, cy - 13, 30, 26], ["right", cx + 11, cy - 13, 30, 26]].forEach(function (d) {
-      refs.dir[d[0]] = el("rect", { x: d[1], y: d[2], width: d[3], height: d[4], rx: 5, class: "btn-shape dir-shape dpad-arm" }, svg);
+    [["up", 0, -1], ["down", 0, 1], ["left", -1, 0], ["right", 1, 0]].forEach(function (d) {
+      const vertical = d[1] === 0;
+      const w = vertical ? 30 : 36, h = vertical ? 36 : 30;
+      const x = cx + d[1] * 30 - w / 2, y = cy + d[2] * 30 - h / 2;
+      refs.dir[d[0]] = el("rect", { x: x, y: y, width: w, height: h, rx: 8, class: "dir-shape dpad2" }, svg);
+      const ax = cx + d[1] * 36, ay = cy + d[2] * 36;   // setinha apontando para fora
+      const tip = [ax + d[1] * 5, ay + d[2] * 5], b1 = [ax - d[2] * 4 - d[1] * 2, ay + d[1] * 4 - d[2] * 2], b2 = [ax + d[2] * 4 - d[1] * 2, ay - d[1] * 4 - d[2] * 2];
+      el("path", { d: "M" + tip + " L" + b1 + " L" + b2 + " Z", class: "dpad2-arrow" }, svg);
     });
 
-    // Botões centrais
-    if (style === "xbox") {
-      el("circle", { cx: 360, cy: 108, r: 15, class: "pad-home" }, svg);
-      el("circle", { cx: 318, cy: 150, r: 8, class: "pad-small" }, svg);
-      el("circle", { cx: 402, cy: 150, r: 8, class: "pad-small" }, svg);
-    } else {
-      el("rect", { x: 290, y: 74, width: 140, height: 64, rx: 12, class: "pad-touch" }, svg);
-      el("rect", { x: 258, y: 86, width: 10, height: 22, rx: 5, class: "pad-small" }, svg);
-      el("rect", { x: 452, y: 86, width: 10, height: 22, rx: 5, class: "pad-small" }, svg);
-      el("circle", { cx: 360, cy: 186, r: 10, class: "pad-home" }, svg);
+    /* Botões de face em losango */
+    const fc = pos.face, dist = 40;
+    [["Y", 0, -1], ["X", -1, 0], ["B", 1, 0], ["A", 0, 1]].forEach(function (f) {
+      const s = slot[f[0]], color = colorOf(s);
+      const x = fc[0] + f[1] * dist, y = fc[1] + f[2] * dist;
+      const g = el("g", { transform: "translate(" + x + " " + y + ")", color: color, style: colorVars(color) }, svg);
+      refs.btn[f[0]] = el("circle", { r: 22, class: "btn-shape face" }, g);
+      if (ps) PS_SYMBOL[f[0]](g);
+      else text(g, 0, 1, names[f[0]], color, 22).classList.add("sym-text");
+    });
+
+    return function (dirs, state) {
+      const m = stickOffset(dirs, state);
+      leftCap.setAttribute("cx", (pos.ls[0] + m.x * 9).toFixed(1));
+      leftCap.setAttribute("cy", (pos.ls[1] + m.y * 9).toFixed(1));
+    };
+  }
+  /** Deslocamento do analógico no desenho: posição real do eixo (com controle)
+      ou, sem controle, só as setas do teclado (que contam como D-pad, não como analógico). */
+  function stickOffset(dirs, state) {
+    if (state && state.axes && (Math.abs(state.axes.x) > 0.08 || Math.abs(state.axes.y) > 0.08)) {
+      return { x: Math.max(-1, Math.min(1, state.axes.x)), y: Math.max(-1, Math.min(1, state.axes.y)) };
     }
+    return { x: 0, y: 0 };
+  }
 
-    // Botões de face (losango)
-    const fc = [515, 150], d = 38;
-    [["Y", fc[0], fc[1] - d], ["X", fc[0] - d, fc[1]], ["B", fc[0] + d, fc[1]], ["A", fc[0], fc[1] + d]].forEach(function (f) {
-      const s = slot[f[0]], color = fillOf(s), g = el("g", { color: color }, svg);
-      refs.btn[f[0]] = el("circle", { cx: f[1], cy: f[2], r: 19, fill: color, class: "btn-shape" }, g);
-      const lbl = labelOf(s, f[0]);
-      text(g, f[1], f[2] + 1, lbl, labelColor(color), fitSize(lbl, 19));
+  /* Pad com os desenhos do Trailpad (CC0), carregados de js/pad-assets.js.
+     Se o arquivo não estiver na página, usa o desenho em traço acima. */
+  function drawPad(svg, cfg, refs) {
+    const art = window.InputLabPadArt && window.InputLabPadArt[cfg.pad.style === "ps" ? "ps" : "xbox"];
+    if (!art) return drawPadLine(svg, cfg, refs);
+    const ps = cfg.pad.style === "ps";
+    const slot = {}; cfg.pad.slots.forEach(function (s) { slot[s.phys] = s; });
+    const names = PHYS_NAMES[ps ? "ps" : "xbox"];
+    const colorOf = function (s) { return s && s.label !== "" ? s.color : UNUSED; };
+    const part = {}; art.forEach(function (p) { part[p.id] = p; });
+    const DIRS = { Up: "up", Down: "down", Left: "left", Right: "right" };
+    const FACE = { A: true, B: true, X: true, Y: true };
+    const SHOULDER = { LT: true, RT: true, LB: true, RB: true };
+
+    /** Coloca o SVG de uma peça dentro de um <g>, na posição do layout. */
+    const place = function (p, parent, extra) {
+      const g = el("g", Object.assign({ class: "tp-part tp-" + p.id }, extra || {}), parent);
+      if (p.svg) {
+        const inner = el("svg", { x: p.x, y: p.y, width: p.w, height: p.h, viewBox: p.vb, preserveAspectRatio: "xMidYMid meet", overflow: "visible", fill: "none" }, g);
+        inner.innerHTML = p.svg;
+        return { g: g, svg: inner };
+      }
+      return { g: g, svg: null };
+    };
+
+    // Ordem de desenho: corpo, gatilhos atrás, bumpers na frente, depois o resto
+    const order = ["base", "LT", "RT", "LB", "RB"].concat(art.map(function (p) { return p.id; }).filter(function (id) {
+      return ["base", "LT", "RT", "LB", "RB"].indexOf(id) < 0;
+    }));
+    let leftStick = null;
+    order.forEach(function (id) {
+      const p = part[id]; if (!p) return;
+      if (SHOULDER[id]) {
+        const color = colorOf(slot[id]);
+        const r = place(p, svg, { color: color, style: colorVars(color) });
+        refs.btn[id] = r.svg;
+      } else if (DIRS[id]) {
+        const r = place(p, svg);
+        r.svg.classList.add("tp-dir");
+        refs.dir[DIRS[id]] = r.svg;
+      } else if (FACE[id]) {
+        // Botão de face: círculo escuro + símbolo do PlayStation (colorido) ou letra do Xbox
+        const color = colorOf(slot[id]);
+        const g = el("g", { class: "tp-part tp-face", color: color, style: colorVars(color) }, svg);
+        const cx = p.x + p.w / 2, cy = p.y + p.h / 2, rr = Math.min(p.w, p.h) / 2;
+        refs.btn[id] = el("circle", { cx: cx, cy: cy, r: rr, class: "btn-shape face tp-face-bg" }, g);
+        if (p.svg) {
+          const sym = el("svg", { x: p.x, y: p.y, width: p.w, height: p.h, viewBox: p.vb, overflow: "visible", fill: "none", class: "tp-sym" }, g);
+          sym.innerHTML = p.svg.replace(' class="tp-shape"', "");
+        } else {
+          text(g, cx, cy + 1, names[id], "#D5D8DE", rr * 1.05).classList.add("tp-letter");
+        }
+      } else if (id === "LS") {
+        leftStick = place(p, svg);
+      } else {
+        place(p, svg);
+      }
     });
 
-    return function (dirs) {
-      const h = (dirs.right ? 1 : 0) - (dirs.left ? 1 : 0), v = dirs.up ? -1 : (dirs.down ? 1 : 0);
-      leftCap.setAttribute("cx", pos.ls[0] + h * 10);
-      leftCap.setAttribute("cy", pos.ls[1] + v * 10);
+    return function (dirs, state) {
+      if (!leftStick || !leftStick.svg) return;
+      const m = stickOffset(dirs, state);
+      leftStick.svg.setAttribute("x", (part.LS.x + m.x * 9).toFixed(1));
+      leftStick.svg.setAttribute("y", (part.LS.y + m.y * 9).toFixed(1));
     };
   }
 
@@ -421,7 +625,7 @@
     opts = opts || {};
     container.innerHTML = "";
     const names = { stick: "arcade stick", leverless: "controle leverless", pad: "controle " + (cfg.pad.style === "ps" ? "estilo PlayStation" : "estilo Xbox") };
-    const svg = el("svg", { viewBox: "0 0 720 360", class: "il-pad w-100", role: "img", "aria-label": "Visualização do " + names[cfg.layout] });
+    const svg = el("svg", { viewBox: "0 0 720 360", class: "il-pad w-100" + (cfg.buttonStyle === "filled" ? "" : " outline"), style: "--il-btn-fill:" + (cfg.buttonFill || "#0B0D10") + ";--il-btn-label:" + labelColor(cfg.buttonFill || "#0B0D10"), role: "img", "aria-label": "Visualização do " + names[cfg.layout] });
     const refs = { btn: {}, dir: {} };
     let moveDirs = null;
     if (cfg.layout === "stick") moveDirs = drawStick(svg, cfg, refs, opts);
@@ -460,9 +664,14 @@
 
     return {
       update: function (state) {
-        Object.keys(refs.btn).forEach(function (id) { refs.btn[id].classList.toggle("pressed", state.buttons.has(id)); });
-        Object.keys(refs.dir).forEach(function (d) { refs.dir[d].classList.toggle("pressed", !!state.dirs[d]); });
-        if (moveDirs) moveDirs(state.dirs);
+        const mark = function (shape, on) {
+          shape.classList.toggle("pressed", on);
+          if (shape.parentNode && shape.parentNode.tagName === "g") shape.parentNode.classList.toggle("is-pressed", on);
+        };
+        Object.keys(refs.btn).forEach(function (id) { mark(refs.btn[id], state.buttons.has(id)); });
+        const lit = cfg.layout === "pad" && state.dpad ? state.dpad : state.dirs;
+        Object.keys(refs.dir).forEach(function (d) { mark(refs.dir[d], !!lit[d]); });
+        if (moveDirs) moveDirs(state.dirs, state);
       }
     };
   }
@@ -495,6 +704,7 @@
     GAME_PRESETS: GAME_PRESETS, PHYS_NAMES: PHYS_NAMES, UNUSED: UNUSED,
     defaultConfig: defaultConfig, normalizeConfig: normalizeConfig, applyPreset: applyPreset,
     activeButtons: activeButtons, fromGallery: fromGallery, describeInput: describeInput,
+    describeGp: describeGp, portableGp: portableGp, describeKey: describeKey, dirOfKey: dirOfKey,
     contrast: contrast, labelColor: labelColor,
     InputReader: InputReader, buildPad: buildPad, History: History
   };

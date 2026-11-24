@@ -53,7 +53,9 @@ inputlab/
 ├── css/style.css       Paleta, temas claro/escuro, alto contraste, componentes
 ├── js/
 │   ├── main.js         Tema, painel de acessibilidade, estado de login na navbar
-│   ├── auth.js         Login demonstrativo (localStorage + hash SHA-256)
+│   ├── auth.js         "Fachada" de login usada pelo resto do site (quem está logado, presets)
+│   ├── firebase-auth.js Login real com Firebase Authentication (cadastro, entrar, sair, recuperar senha)
+│   ├── firebase-config.js Configuração do projeto Firebase
 │   ├── notation.js     Lógica pura: numpad, SOCD, detecção de especiais (testável)
 │   ├── pad.js          Modelo de botões, presets por jogo, leitura de controle/teclado, desenho SVG, histórico
 │   ├── lab.js          Página do Lab (loop, personalização, presets, URL do overlay)
@@ -62,7 +64,7 @@ inputlab/
 │   ├── glossario.js    Dados e busca do glossário
 │   └── forms.js        Validação de login, cadastro e contato
 ├── img/                Imagens das skins (geradas a partir do próprio renderizador) e favicon
-├── vendor/             Bootstrap 5.3.9 e Bootstrap Icons (cópia local, funciona offline)
+├── vendor/             Bootstrap 5.3.9, Bootstrap Icons e Firebase JS SDK 13.2.0 (cópias locais)
 └── tests/              Testes unitários (node:test)
 ```
 
@@ -102,7 +104,7 @@ Todas passam no nível AA (4.5:1 para texto normal). No modo claro, as cores pre
 - **Início:** hero com exemplo de notação, cards de recursos, carrossel de skins, cards de "como funciona" e chamada para criar conta.
 - **Glossário:** 24 termos, busca que ignora acentos (`notacao` encontra "notação"), destaque do termo buscado com `<mark>`, filtros por categoria e estado vazio com sugestão.
 - **Contato:** validação HTML5 com mensagens em português, contador de caracteres e foco no primeiro campo inválido.
-- **Login/Cadastro:** validação, botão de mostrar/ocultar senha e confirmação de senha.
+- **Login/Cadastro:** contas reais com **Firebase Authentication** (cadastro, entrar, sair, "esqueci minha senha"), validação, mostrar/ocultar senha e confirmação de senha. A sessão continua ativa ao recarregar a página.
 
 ### Passo 6: A ferramenta (Lab)
 1. `notation.js`: converte as 4 direções em número do numpad, aplica a limpeza SOCD e detecta os especiais como **subsequência dentro de uma janela de tempo** (450 ms), como o buffer de um jogo real. Os movimentos mais longos são testados primeiro, então 41236 tem prioridade sobre 236, e 623 sobre 236.
@@ -123,6 +125,16 @@ Todas passam no nível AA (4.5:1 para texto normal). No modo claro, as cores pre
 ### Passo 8: Publicação
 GitHub Pages (ver seção 6).
 
+## 4.1 Configurar o login (Firebase)
+
+1. Criar um projeto em https://console.firebase.google.com (plano gratuito).
+2. **Authentication → Começar → Método de login → E-mail/senha → Ativar.**
+3. **Configurações do projeto → Seus apps → Web (`</>`)**: registrar o app e copiar o objeto `firebaseConfig`.
+4. Colar os valores em `js/firebase-config.js`.
+5. (Recomendado) **Authentication → Configurações → Domínios autorizados**: adicionar o domínio do GitHub Pages.
+
+Para testar sem internet, dá para usar o emulador do Firebase (`firebase emulators:start --only auth`) e abrir as páginas com `?emulador=1`.
+
 ## 5. Tecnologias
 
 - HTML5, CSS3 (variáveis CSS, `color-mix`, grid), JavaScript (ES2017, sem frameworks JS)
@@ -140,7 +152,7 @@ GitHub Pages (ver seção 6).
 
 - **Overlay x foco da janela:** por segurança, os navegadores só entregam inputs do controle para a página em foco. Desde o OBS 31, a fonte de navegador segue essa regra. Enquanto o jogo estiver em foco, o overlay pode parar de atualizar.
   - *Solução futura:* um pequeno programa nativo que lê o controle e envia os inputs por WebSocket para o overlay. É a mesma arquitetura do plugin *input-overlay* do OBS.
-- **Login demonstrativo:** não há servidor. As contas ficam no `localStorage` do navegador, com a senha em hash SHA-256 (sem *salt* aleatório nem limite de tentativas). Isso **não** é autenticação segura. *Futuro:* um back-end com banco de dados e hash com bcrypt ou Argon2.
+- **Presets por conta:** o login é real (Firebase), mas os presets de cada usuário ainda ficam no navegador, separados pelo identificador da conta. Entrando em outro computador, a conta funciona, mas os presets não aparecem. *Futuro:* guardar os presets no Cloud Firestore.
 - **Contato:** o envio é simulado. *Futuro:* integração com Formspree ou EmailJS.
 - **Mapeamento de controles:** a Gamepad API não é igual em todos os controles, sistemas e navegadores. A tabela de mapeamento "não padrão" foi escrita para o driver xpad do Linux. Para outros casos, o remapeamento do Lab (botões e eixos) contorna o problema.
 - **Presets por jogo:** são sugestões de layout montadas para o projeto, não configurações oficiais dos jogos. Todos os rótulos e cores podem ser editados.

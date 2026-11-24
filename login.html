@@ -13,6 +13,7 @@
   <!-- Aplica tema e preferências antes de desenhar a página (evita "flash") -->
   <script src="js/auth.js"></script>
   <script src="js/main.js"></script>
+  <script type="module" src="js/firebase-auth.js"></script>
 </head>
 <body data-page="login">
 
@@ -46,10 +47,10 @@
 <section class="py-5">
   <div class="container" style="max-width:960px">
     <div class="text-center mb-4">
-      <p class="il-kicker mb-1">Conta</p>
       <h1 class="il-display h1">Entre para salvar seus presets</h1>
     </div>
-    <div class="alert alert-info small" role="note"><i class="bi bi-info-circle" aria-hidden="true"></i> <strong>Projeto acadêmico:</strong> não há servidor. A conta fica salva apenas neste navegador e a senha é armazenada como hash. Não use uma senha real.</div>
+    <div class="alert alert-info small" role="note"><i class="bi bi-shield-lock" aria-hidden="true"></i> As contas são gerenciadas pelo <strong>Firebase Authentication</strong> (Google). Sua senha é enviada por conexão segura e nunca fica salva neste site.</div>
+    <div id="authStatus" role="status" hidden></div>
     <div class="row g-4">
       <div class="col-md-6">
         <form class="il-card p-4 h-100" id="loginForm" novalidate aria-labelledby="loginTitle">
@@ -68,6 +69,7 @@
             </div>
           </div>
           <button class="btn btn-il-p1 w-100" type="submit">Entrar</button>
+          <button class="btn btn-link btn-sm w-100 mt-2" type="button" id="forgotPassword">Esqueci minha senha</button>
           <div id="loginAlert" role="alert" tabindex="-1" hidden></div>
         </form>
       </div>
@@ -134,8 +136,8 @@
       </div>
       <div class="col-md-3">
         <h2 class="h6 fw-bold">Projeto</h2>
-        <p class="text-muted small mb-2">Projeto Final — Desenvolvimento de Interfaces 2/2026.</p>
-        <a href="https://github.com/" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
+        <p class="text-muted small mb-2">Projeto Final de Desenvolvimento de Interfaces, 2/2026.</p>
+        <a href="https://github.com/VixLmm/inputLab" class="btn btn-il-ghost btn-sm" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> Código no GitHub</a>
       </div>
     </div>
     <hr class="my-4">
@@ -149,7 +151,7 @@
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="a11yPanel" aria-labelledby="a11yTitle">
   <div class="offcanvas-header border-bottom">
-    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle"><i class="bi bi-universal-access il-p2" aria-hidden="true"></i> Acessibilidade</h2>
+    <h2 class="offcanvas-title h5 fw-bold" id="a11yTitle">Acessibilidade</h2>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
   </div>
   <div class="offcanvas-body">

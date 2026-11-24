@@ -27,10 +27,20 @@
     if (id && id.indexOf("dir:") === 0) return config.leverless.dirs[id.slice(4)];
     return buttons().find(function (b) { return b.id === id; });
   }
-  const BODY_COLOR = "#242836";   // corpo do controle (fixo nos dois temas — ver style.css)
-  function bodyColor() { return BODY_COLOR; }
+  const BODY_COLOR = "#15181E";   // tampo do controle, onde ficam os botões (fixo nos dois temas — ver style.css)
+  /** Cor que fica atrás dos botões: a base escolhida ou, se for transparente, o fundo do palco. */
+  function bodyColor() {
+    if (config.layout === "pad") return "#1B1C20";
+    if (config.baseColor) return config.baseColor;
+    const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle($("stageBox")).backgroundColor || "");
+    return m ? "#" + [m[1], m[2], m[3]].map(function (n) { return (+n).toString(16).padStart(2, "0"); }).join("") : BODY_COLOR;
+  }
   // WCAG 1.4.11: componentes de interface precisam de 3:1 contra o que está ao redor
-  function bodyContrast(color) { return P.contrast(color, bodyColor()); }
+  // No arcade e no leverless, o anel preto do botão também separa o botão do fundo (WCAG 1.4.11)
+  function bodyContrast(color) {
+    const bg = bodyColor(), c = P.contrast(color, bg);
+    return config.layout === "pad" ? c : Math.max(c, P.contrast("#0B0B0B", bg));
+  }
 
   /* ---------- Desenho ---------- */
   function redrawPad() {
@@ -58,7 +68,8 @@
         (isPad ? '<span class="phys" title="Botão físico">' + esc(names[b.phys]) + "</span>" : '<span class="phys" aria-hidden="true">' + (low ? '<i class="bi bi-exclamation-triangle-fill il-p1"></i>' : "") + "</span>") +
         '<input type="color" class="form-control form-control-color" data-field="color" value="' + esc(b.color) + '" aria-label="Cor do botão ' + esc(name) + '">' +
         '<input class="form-control form-control-sm" data-field="label" maxlength="4" value="' + esc(b.label) + '" aria-label="Rótulo do botão ' + esc(name) + '"' + (isPad ? ' placeholder="(sem uso)"' : "") + ">" +
-        '<button type="button" class="btn btn-il-ghost btn-sm map-btn" data-act="map" title="Remapear">' + esc(P.describeInput(b, config.pad.style)) + "</button>" +
+        '<button type="button" class="btn btn-il-ghost btn-sm map-btn" data-act="map-gp" title="Remapear no controle" aria-label="Botão do controle para ' + esc(name) + ': ' + esc(P.describeGp(b, config.pad.style)) + '. Clique para remapear"><i class="bi bi-controller" aria-hidden="true"></i> ' + esc(P.describeGp(b, config.pad.style)) + "</button>" +
+        '<button type="button" class="btn btn-il-ghost btn-sm map-btn" data-act="map-key" title="Remapear no teclado" aria-label="Tecla para ' + esc(name) + ': ' + esc(P.describeKey(b.key)) + '. Clique para remapear"><i class="bi bi-keyboard" aria-hidden="true"></i> ' + esc(P.describeKey(b.key)) + "</button>" +
         (isPad ? "" :
           '<button type="button" class="btn btn-il-ghost btn-sm" data-act="select" aria-pressed="' + (b.id === selectedId) + '" aria-label="Posicionar ' + esc(name) + '" title="Posição e tamanho"><i class="bi bi-arrows-move" aria-hidden="true"></i></button>' +
           '<button type="button" class="btn btn-il-ghost btn-sm" data-act="remove" aria-label="Remover ' + esc(name) + '" title="Remover"><i class="bi bi-trash" aria-hidden="true"></i></button>') +
@@ -68,6 +79,8 @@
     $("padAddNote").hidden = !isPad;
     $("editModeBox").hidden = isPad;
     $("padStyleBox").hidden = !isPad;
+    $("baseBox").hidden = isPad;
+    $("trailBox").hidden = config.layout !== "stick";
     $("buttonCount").textContent = buttons().filter(function (b) { return b.label !== ""; }).length;
   }
   function markSelectedRow() {
@@ -92,11 +105,11 @@
       $("selR").value = it.r || 30;
       const c = bodyContrast(it.color), ok = c >= 3;
       $("selContrast").innerHTML = '<i class="bi ' + (ok ? "bi-check-circle-fill il-p2" : "bi-exclamation-triangle-fill il-p1") + '" aria-hidden="true"></i> ' +
-        "Contraste com o corpo do controle: " + c.toFixed(1) + ":1 " + (ok ? "(passa 3:1)" : "(abaixo de 3:1 — o botão some no fundo)");
+        "Contraste com o corpo do controle: " + c.toFixed(1) + ":1 " + (ok ? "(passa 3:1)" : "(abaixo de 3:1: o botão some no fundo)");
     } else $("selContrast").textContent = "";
   }
 
-  function fullRefresh() { redrawPad(); renderList(); renderSelectedEditor(); persist(); }
+  function fullRefresh() { redrawPad(); renderList(); renderSelectedEditor(); renderDirKeys(); updateKeyHint(); updateFillBox(); persist(); }
 
   /* ---------- Numpad e histórico ---------- */
   function renderNumpad(dir) {
@@ -135,7 +148,7 @@
       const m = N.detectMotion(r.dirLog, now, 450);
       if (m) {
         const btns = Array.from(r.newPress).map(function (id) { const b = findItem(id); return b ? (b.label || id) : id; }).join("+");
-        const text = m.code + btns + " — " + m.name;
+        const text = m.code + btns + " · " + m.name;
         $("motionOut").textContent = text;
         if (text !== lastMotionText) $("motionLive").textContent = text;
         lastMotionText = text;
@@ -148,22 +161,64 @@
   }
 
   /* ---------- Remapeamento ---------- */
-  function startMapping(id) {
-    const b = findItem(id); if (!b) return;
+  /** Remove uma tecla de onde ela já estava (botão ou direção), para não ficar duplicada. */
+  function freeKey(code, exceptId) {
+    let where = null;
+    buttons().forEach(function (o) { if (o.key === code && o.id !== exceptId) { o.key = null; where = o.label || o.id; } });
+    Object.keys(config.dirKeys).forEach(function (d) { if (config.dirKeys[d] === code && "dir:" + d !== exceptId) { config.dirKeys[d] = null; where = DIR_NAMES[d]; } });
+    return where;
+  }
+  const DIR_NAMES = { up: "↑ cima", down: "↓ baixo", left: "← trás", right: "→ frente" };
+
+  function startMapping(id, mode) {
+    const isDir = id.indexOf("dir:") === 0;
+    const b = isDir ? null : findItem(id);
+    if (!isDir && !b) return;
+    const name = isDir ? DIR_NAMES[id.slice(4)] : (b.label || id);
     mappingId = id;
     document.querySelectorAll("#buttonList .il-btn-row").forEach(function (li) { li.classList.toggle("is-mapping", li.getAttribute("data-id") === id); });
     $("remapHint").hidden = false;
-    $("remapHint").textContent = "Aperte no controle ou no teclado o botão para “" + (b.label || id) + "”… (Esc cancela)";
+    $("remapHint").textContent = (mode === "key" ? "Aperte a tecla" : "Aperte no controle o botão") + " para “" + name + "”… (Esc cancela)";
     reader.startCapture(function (res) {
       mappingId = null;
       if (!res) { $("remapHint").textContent = "Mapeamento cancelado."; }
-      else {
-        if (res.key) b.key = res.key; else b.gp = res.gp;
-        $("remapHint").textContent = "“" + (b.label || id) + "” agora responde a: " + P.describeInput(b, config.pad.style);
-        announce($("remapHint").textContent);
+      else if (res.key) {
+        const antes = freeKey(res.key, id);
+        if (isDir) config.dirKeys[id.slice(4)] = res.key; else b.key = res.key;
+        $("remapHint").textContent = "“" + name + "” agora usa a tecla " + P.describeKey(res.key) + (antes ? " (ela saiu de “" + antes + "”)" : "") + ".";
+      } else {
+        b.gp = P.portableGp(res.gp, res.mapping);   // nome físico, igual em qualquer navegador
+        // O mesmo botão do controle não dispara dois botões: tira de onde ele estava
+        let antes = null;
+        buttons().forEach(function (o) {
+          if (o !== b && o.gp != null && JSON.stringify(o.gp) === JSON.stringify(b.gp)) { o.gp = null; antes = o.label || o.id; }
+        });
+        $("remapHint").textContent = "“" + name + "” agora responde a: " + P.describeGp(b, config.pad.style) + (antes ? " (ele saiu de “" + antes + "”)" : "") + ".";
       }
-      renderList(); persist();
-    });
+      announce($("remapHint").textContent);
+      renderList(); renderDirKeys(); updateKeyHint(); persist();
+    }, mode);
+  }
+
+  /* ---------- Teclado: direções e dica de teclas ---------- */
+  function renderDirKeys() {
+    $("dirKeyList").innerHTML = ["up", "left", "down", "right"].map(function (d) {
+      const k = config.dirKeys[d];
+      return '<button type="button" class="btn btn-il-ghost btn-sm" data-dir="' + d + '" aria-label="Tecla para ' + DIR_NAMES[d] + ': ' + esc(P.describeKey(k)) + '. Clique para remapear">' +
+        DIR_NAMES[d].split(" ")[0] + ' <span class="il-kbd">' + esc(P.describeKey(k)) + "</span></button>";
+    }).join("");
+  }
+  function updateKeyHint() {
+    const box = $("keyHint"); if (!box) return;
+    const dirs = ["up", "left", "down", "right"].map(function (d) { return P.describeKey(config.dirKeys[d]); }).join(" ");
+    const btns = buttons().filter(function (b) { return b.key && b.label !== ""; })
+      .map(function (b) { return '<span class="il-kbd">' + esc(P.describeKey(b.key)) + "</span> " + esc(b.label); }).join(" · ");
+    box.innerHTML = '<i class="bi bi-keyboard" aria-hidden="true"></i> Teclado: <span class="il-kbd">' + esc(dirs) + "</span> direções (setas também)" + (btns ? " · " + btns : "");
+  }
+
+  /* ---------- Cor de fundo dos botões (só arcade/leverless no estilo contorno) ---------- */
+  function updateFillBox() {
+    $("btnFillBox").hidden = config.layout === "pad" || config.buttonStyle === "filled";
   }
 
   /* ---------- Presets salvos na conta ---------- */
@@ -184,9 +239,17 @@
 
   /* ---------- URL do overlay ---------- */
   function encodeConfig(c) { return btoa(unescape(encodeURIComponent(JSON.stringify(c)))); }
+  /* O link do overlay leva uma cópia da configuração. O OBS não vê as mudanças
+     feitas depois; por isso o Lab avisa quando o link copiado ficou desatualizado. */
+  const COPIED_KEY = "inputlab:overlayCopied";
+  function copiedUrl() { try { return localStorage.getItem(COPIED_KEY); } catch (e) { return null; } }
   function updateOverlayUrl() {
     const base = location.href.replace(/[?#].*$/, "").replace(/[^/]*$/, "");
-    $("overlayUrl").value = base + "overlay.html?c=" + encodeURIComponent(encodeConfig(config));
+    const url = base + "overlay.html?c=" + encodeURIComponent(encodeConfig(config));
+    $("overlayUrl").value = url;
+    $("overlayOpen").href = url;
+    const last = copiedUrl();
+    $("overlayStale").hidden = !last || last === url;
   }
 
   function fillForm() {
@@ -194,8 +257,15 @@
     $("cfgPadStyle").value = config.pad.style;
     $("cfgPreset").value = config.preset in P.GAME_PRESETS ? config.preset : "generic8";
     $("cfgNotation").value = config.notation;
+    $("cfgDirSource").value = config.dirSource || "both";
     $("cfgSide").value = config.side;
     $("cfgHistory").checked = config.history;
+    $("cfgButtonStyle").value = config.buttonStyle || "outline";
+    $("cfgButtonFill").value = config.buttonFill || "#0B0D10";
+    $("cfgBaseTransparent").checked = !config.baseColor;
+    $("cfgBaseColor").value = config.baseColor || config.baseColorPick || "#242836";
+    $("cfgBaseColor").disabled = !config.baseColor;
+    $("cfgTrail").checked = config.trail !== false;
     $("cfgEditMode").checked = editMode;
   }
 
@@ -210,7 +280,8 @@
     const g = new URLSearchParams(location.search).get("preset");
     if (g && window.INPUTLAB_GALLERY && window.INPUTLAB_GALLERY[g]) config = P.fromGallery(window.INPUTLAB_GALLERY[g]);
 
-    fillForm(); fullRefresh(); renderPresets();
+    fillForm(); fullRefresh();
+    Auth.onChange(renderPresets);   // mostra os presets quando o login termina de carregar
 
     $("cfgLayout").addEventListener("change", function (e) { config.layout = e.target.value; selectedId = null; fullRefresh(); });
     $("cfgPadStyle").addEventListener("change", function (e) { config.pad.style = e.target.value; fullRefresh(); });
@@ -220,8 +291,26 @@
       announce("Preset " + P.GAME_PRESETS[key].name + " aplicado");
     });
     $("cfgNotation").addEventListener("change", function (e) { config.notation = e.target.value; persist(); });
+    $("cfgDirSource").addEventListener("change", function (e) { config.dirSource = e.target.value; persist(); });
     $("cfgSide").addEventListener("change", function (e) { config.side = e.target.value; persist(); });
     $("cfgHistory").addEventListener("change", function (e) { config.history = e.target.checked; persist(); });
+    $("cfgButtonStyle").addEventListener("change", function (e) { config.buttonStyle = e.target.value; redrawPad(); updateFillBox(); persist(); });
+    $("cfgButtonFill").addEventListener("input", function (e) { config.buttonFill = e.target.value; redrawPad(); persist(); });
+    // Base do controle: transparente (padrão) ou numa cor escolhida
+    $("cfgBaseTransparent").addEventListener("change", function (e) {
+      config.baseColor = e.target.checked ? null : (config.baseColorPick || "#242836");
+      $("cfgBaseColor").disabled = e.target.checked;
+      redrawPad(); renderList(); renderSelectedEditor(); persist();
+    });
+    $("cfgBaseColor").addEventListener("input", function (e) {
+      config.baseColorPick = e.target.value;
+      if (!$("cfgBaseTransparent").checked) config.baseColor = e.target.value;
+      redrawPad(); renderList(); renderSelectedEditor(); persist();
+    });
+    $("cfgTrail").addEventListener("change", function (e) { config.trail = e.target.checked; persist(); });
+    $("dirKeyList").addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-dir]"); if (btn) startMapping("dir:" + btn.getAttribute("data-dir"), "key");
+    });
     $("cfgEditMode").addEventListener("change", function (e) {
       editMode = e.target.checked; redrawPad();
       announce(editMode ? "Modo edição: arraste os botões ou use os campos X e Y" : "Modo edição desligado");
@@ -233,7 +322,7 @@
       if (!li || !f) return;
       const b = findItem(li.getAttribute("data-id"));
       b[f] = f === "label" ? e.target.value.slice(0, 4) : e.target.value;
-      redrawPad(); renderSelectedEditor(); persist();
+      redrawPad(); renderSelectedEditor(); updateKeyHint(); persist();
       if (f === "color" && config.layout !== "pad") {
         const warn = li.querySelector(".phys");
         warn.innerHTML = bodyContrast(b.color) < 3 ? '<i class="bi bi-exclamation-triangle-fill il-p1"></i>' : "";
@@ -243,7 +332,8 @@
       const btn = e.target.closest("[data-act]"); if (!btn) return;
       const id = btn.closest("[data-id]").getAttribute("data-id");
       const act = btn.getAttribute("data-act");
-      if (act === "map") startMapping(id);
+      if (act === "map-gp") startMapping(id, "gp");
+      if (act === "map-key") startMapping(id, "key");
       if (act === "select") { selectedId = selectedId === id ? null : id; redrawPad(); markSelectedRow(); renderSelectedEditor(); }
       if (act === "remove") {
         const list = config[config.layout].buttons;
@@ -283,7 +373,11 @@
     $("btnCopyOverlay").addEventListener("click", function () {
       const input = $("overlayUrl");
       (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.reject()).then(
-        function () { announce("Link do overlay copiado"); $("btnCopyOverlay").innerHTML = '<i class="bi bi-check2" aria-hidden="true"></i> Copiado'; },
+        function () {
+          try { localStorage.setItem(COPIED_KEY, input.value); } catch (e) {}
+          $("overlayStale").hidden = true;
+          announce("Link do overlay copiado"); $("btnCopyOverlay").innerHTML = '<i class="bi bi-check2" aria-hidden="true"></i> Copiado';
+        },
         function () { input.select(); document.execCommand("copy"); }
       );
       setTimeout(function () { $("btnCopyOverlay").innerHTML = '<i class="bi bi-clipboard" aria-hidden="true"></i> Copiar'; }, 2000);
@@ -311,7 +405,7 @@
 
     reader.onConnection(function (gp) {
       $("padStatus").classList.toggle("on", !!gp);
-      $("padStatusText").textContent = gp ? "Controle conectado: " + gp.id + (gp.mapping === "standard" ? "" : " (mapeamento não padrão — use Remapear se algo não responder)") : "Nenhum controle — usando teclado (aperte um botão do controle para conectar)";
+      $("padStatusText").textContent = gp ? "Controle conectado: " + gp.id + (gp.mapping === "standard" ? "" : " (mapeamento não padrão; use Remapear se algo não responder)") : "Nenhum controle conectado (aperte um botão do controle para conectar e confira se seu navegador permite leitura de dispositivos usb)";
     });
 
     requestAnimationFrame(loop);
