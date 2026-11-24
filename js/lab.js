@@ -142,6 +142,7 @@
     const s = reader.read();
     const dir = N.toNumpad(s.dirs, config.side === "p2");
     if (pad) pad.update(s);
+    if (now - lastAxesT > 100) { lastAxesT = now; renderAxes(s); }
     renderNumpad(dir);
     const r = history.push(dir, s.buttons, now, dt);
     if (r.newPress.size && !mappingId) {
@@ -158,6 +159,40 @@
     $("historyCard").hidden = !config.history;
     renderHistory();
     requestAnimationFrame(loop);
+  }
+
+  /* ---------- Leitura ao vivo dos eixos (diagnóstico) ---------- */
+  let lastAxesT = 0;
+  const LAYOUT_NAMES = { standard: "padrão", xpad: "cru, tipo Xbox", generic: "cru, tipo genérico" };
+  function renderAxes(s) {
+    const out = $("axesReadout");
+    if (!out) return;
+    if (!s.gamepad) { out.textContent = "Sem controle."; return; }
+    const f = function (v) { return (v >= 0 ? "+" : "") + v.toFixed(2); };
+    out.textContent = "Leitura: " + (LAYOUT_NAMES[s.layout] || s.layout) + "\n" +
+      s.rawAxes.map(function (v, i) { return "eixo " + i + ": " + f(v); }).join("   ") + "\n" +
+      "analógico direito lido: x " + f(s.raxes.x) + "  y " + f(s.raxes.y);
+  }
+
+  /* ---------- Analógico direito ---------- */
+  function rsText() {
+    const r = config.rsAxes;
+    return r ? "Detectado: eixos " + r.x + " e " + r.y + " (" + (r.mapping === "standard" ? "mapeamento padrão" : "mapeamento cru") + ")." : "Usando os eixos padrão.";
+  }
+  function detectRightStick() {
+    const out = $("rsStatus");
+    out.textContent = "Empurre o analógico direito para a DIREITA e solte… (Esc cancela)";
+    announce(out.textContent);
+    reader.startCapture(function (res) {
+      if (!res) { out.textContent = "Detecção cancelada. " + rsText(); announce(out.textContent); return; }
+      config.rsAxes = res.stick;
+      persist();
+      out.textContent = rsText();
+      announce("Analógico direito detectado.");
+    }, "stick", function () {
+      out.textContent = "Agora empurre para BAIXO…";
+      announce(out.textContent);
+    });
   }
 
   /* ---------- Remapeamento ---------- */
@@ -187,7 +222,7 @@
         if (isDir) config.dirKeys[id.slice(4)] = res.key; else b.key = res.key;
         $("remapHint").textContent = "“" + name + "” agora usa a tecla " + P.describeKey(res.key) + (antes ? " (ela saiu de “" + antes + "”)" : "") + ".";
       } else {
-        b.gp = P.portableGp(res.gp, res.mapping);   // nome físico, igual em qualquer navegador
+        b.gp = P.portableGp(res.gp, res.mapping, config);   // nome físico, igual em qualquer navegador
         // O mesmo botão do controle não dispara dois botões: tira de onde ele estava
         let antes = null;
         buttons().forEach(function (o) {
@@ -258,6 +293,9 @@
     $("cfgPreset").value = config.preset in P.GAME_PRESETS ? config.preset : "generic8";
     $("cfgNotation").value = config.notation;
     $("cfgDirSource").value = config.dirSource || "both";
+    $("cfgSwapXY").checked = !!config.swapXY;
+    $("cfgSwapAB").checked = !!config.swapAB;
+    $("rsStatus").textContent = rsText();
     $("cfgSide").value = config.side;
     $("cfgHistory").checked = config.history;
     $("cfgButtonStyle").value = config.buttonStyle || "outline";
@@ -292,6 +330,9 @@
     });
     $("cfgNotation").addEventListener("change", function (e) { config.notation = e.target.value; persist(); });
     $("cfgDirSource").addEventListener("change", function (e) { config.dirSource = e.target.value; persist(); });
+    $("cfgSwapXY").addEventListener("change", function (e) { config.swapXY = e.target.checked; persist(); });
+    $("cfgSwapAB").addEventListener("change", function (e) { config.swapAB = e.target.checked; persist(); });
+    $("btnDetectRS").addEventListener("click", detectRightStick);
     $("cfgSide").addEventListener("change", function (e) { config.side = e.target.value; persist(); });
     $("cfgHistory").addEventListener("change", function (e) { config.history = e.target.checked; persist(); });
     $("cfgButtonStyle").addEventListener("change", function (e) { config.buttonStyle = e.target.value; redrawPad(); updateFillBox(); persist(); });

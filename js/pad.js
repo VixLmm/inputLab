@@ -17,6 +17,39 @@
   const STD = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, VIEW: 8, MENU: 9, LS: 10, RS: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15, HOME: 16 };
   // Mapeamento "cru" do driver xpad no Linux (Firefox/Zen): gatilhos chegam como eixos
   const RAW = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: { a: 2, t: 0, s: 1 }, RT: { a: 5, t: 0, s: 1 }, VIEW: 6, MENU: 7, HOME: 8, LS: 9, RS: 10 };
+  // Controles HID genéricos no Linux (8BitDo, Xbox por Bluetooth…): o analógico direito
+  // vem nos eixos 2/3, os gatilhos nos eixos 4 (RT) e 5 (LT) e o X/Y vem invertido (botões 3/2).
+  const RAW_GEN = Object.assign({}, RAW, { X: 3, Y: 2, LT: { a: 5, t: 0, s: 1 }, RT: { a: 4, t: 0, s: 1 } });
+
+  /**
+   * Descobre como um controle "cru" numera os eixos olhando o repouso dos gatilhos
+   * (gatilho solto = -1): eixo 2 em -1 → xpad (cabo Xbox); eixo 4 em -1 → HID genérico.
+   * A resposta fica guardada por controle para não mudar enquanto se joga.
+   */
+  const LAYOUT_KEY = "inputlab:padLayouts";
+  const rawLayoutCache = (function () { try { return JSON.parse(localStorage.getItem(LAYOUT_KEY)) || {}; } catch (e) { return {}; } })();
+  function rawLayout(pad, cfg) {
+    if (!pad || pad.mapping === "standard") return "standard";
+    const r = cfg && cfg.rsAxes;
+    if (r && r.mapping === (pad.mapping || "")) return r.x === 2 ? "generic" : "xpad";
+    if (rawLayoutCache[pad.id]) return rawLayoutCache[pad.id];
+    const near = function (v, t) { return v != null && Math.abs(v - t) < 0.05; };
+    let found = null;
+    // Os dois gatilhos soltos ficam em -1: eixos 2 e 5 no xpad, 4 e 5 no genérico.
+    if (near(pad.axes[5], -1) && near(pad.axes[2], -1) && !near(pad.axes[4], -1)) found = "xpad";
+    else if (near(pad.axes[5], -1) && near(pad.axes[4], -1) && !near(pad.axes[2], -1)) found = "generic";
+    if (found) {
+      rawLayoutCache[pad.id] = found;   // guarda: na próxima vez já sabe, mesmo antes de tocar nos gatilhos
+      try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(rawLayoutCache)); } catch (e) { /* sem armazenamento */ }
+      return found;
+    }
+    // Alguns navegadores dão 0 aos gatilhos até o primeiro toque. Enquanto não dá para saber:
+    // controles da Microsoft (045e) costumam ser xpad; os outros, HID genérico.
+    return pad.id.indexOf("045e-") === 0 ? "xpad" : "generic";
+  }
+  function tableFor(mapping) { return mapping === "standard" ? STD : mapping === "generic" ? RAW_GEN : RAW; }
+  /** "standard", "generic" ou "" (xpad): é o que vai junto com cada captura de botão. */
+  function mappingOf(pad, cfg) { const l = rawLayout(pad, cfg); return l === "xpad" ? "" : l; }
 
   const PHYS_NAMES = {
     xbox: { A: "A", B: "B", X: "X", Y: "Y", LB: "LB", RB: "RB", LT: "LT", RT: "RT" },
@@ -102,7 +135,7 @@
 
   function defaultConfig() {
     return applyPreset({
-      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8", buttonStyle: "outline", buttonFill: "#0B0D10", baseColor: null, baseColorPick: "#242836", trail: true, dirSource: "both", stickLayout2: true,
+      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8", buttonStyle: "outline", buttonFill: "#0B0D10", baseColor: null, baseColorPick: "#242836", trail: true, dirSource: "both", swapXY: false, swapAB: false, rsAxes: null, stickLayout2: true,
       dirKeys: { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD" },
       stick: { buttons: [] },
       leverless: { buttons: [], dirs: { left: { x: 82, y: 172 }, down: { x: 152, y: 152 }, right: { x: 222, y: 168 }, up: { x: 318, y: 276 } } },
@@ -116,7 +149,7 @@
     if (!c || c.version !== 2) return d;
     try {
       const out = JSON.parse(JSON.stringify(c));
-      ["notation", "side", "history", "layout", "preset", "buttonStyle", "buttonFill", "baseColor", "baseColorPick", "trail", "dirSource"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
+      ["notation", "side", "history", "layout", "preset", "buttonStyle", "buttonFill", "baseColor", "baseColorPick", "trail", "dirSource", "swapXY", "swapAB", "rsAxes"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
       out.dirKeys = Object.assign({}, d.dirKeys, out.dirKeys || {});
       if (["stick", "leverless", "pad"].indexOf(out.layout) < 0) out.layout = "stick";
       out.stick = out.stick && Array.isArray(out.stick.buttons) ? out.stick : d.stick;
@@ -201,14 +234,26 @@
    * no nome físico do botão ("X", "RT"...). Assim o mapeamento feito no Zen/Firefox
    * continua certo no OBS (Chromium), e vice-versa. Se não reconhecer, mantém o número.
    */
-  function portableGp(spec, mapping) {
-    const table = mapping === "standard" ? STD : RAW;
+  function portableGp(spec, mapping, cfg) {
+    const table = tableFor(mapping);
     for (const name in table) {
       const v = table[name];
-      if (typeof spec === "number" && v === spec) return name;
-      if (spec && typeof spec === "object" && v && typeof v === "object" && v.a === spec.a && (v.s || 1) === (spec.s || 1)) return name;
+      if (typeof spec === "number" && v === spec) return swapPhys(name, cfg);
+      if (spec && typeof spec === "object" && v && typeof v === "object" && v.a === spec.a && (v.s || 1) === (spec.s || 1)) return swapPhys(name, cfg);
     }
     return spec;
+  }
+
+  /**
+   * Alguns drivers (Linux) e controles no modo Switch entregam X/Y ou A/B trocados.
+   * Com "Trocar X e Y" / "Trocar A e B" ligados no Lab, o nome físico é invertido
+   * antes de procurar o botão (e ao remapear), então o botão certo acende.
+   */
+  function swapPhys(name, cfg) {
+    if (!cfg || typeof name !== "string") return name;
+    if (cfg.swapXY && (name === "X" || name === "Y")) return name === "X" ? "Y" : "X";
+    if (cfg.swapAB && (name === "A" || name === "B")) return name === "A" ? "B" : "A";
+    return name;
   }
 
   /* ---------------- Leitura de inputs ---------------- */
@@ -226,7 +271,7 @@
     window.addEventListener("keydown", function (e) {
       if (capture) {
         if (e.code === "Escape") { e.preventDefault(); const cb0 = capture.cb; capture = null; cb0(null); return; }
-        if (capture.mode === "gp") return;                 // esperando o controle: ignora o teclado
+        if (capture.mode === "gp" || capture.mode === "stick") return;   // esperando o controle: ignora o teclado
         e.preventDefault();
         const cb = capture.cb; capture = null;
         cb({ key: e.code });
@@ -251,10 +296,23 @@
     }
     function btnDown(btn) { return !!btn && (btn.pressed || btn.value > 0.5); }
 
+    /**
+     * Analógico direito. Se o usuário usou "Detectar analógico direito" neste tipo de
+     * mapeamento, usa os eixos detectados; senão, o palpite: 2/3 no padrão, 3/4 no xpad cru.
+     */
+    function rightStickAxes(p, cfg) {
+      const r = cfg.rsAxes;
+      if (r && r.mapping === (p.mapping || "") && p.axes[r.x] != null && p.axes[r.y] != null) {
+        return { x: r.sx * p.axes[r.x], y: r.sy * p.axes[r.y] };
+      }
+      if (p.mapping === "standard" || rawLayout(p, cfg) === "generic") return { x: p.axes[2] || 0, y: p.axes[3] || 0 };
+      return p.axes.length >= 5 ? { x: p.axes[3] || 0, y: p.axes[4] || 0 } : { x: 0, y: 0 };
+    }
+
     /** Resolve "RT", 7 ou {a:5,t:0,s:1} para o estado atual do controle. */
     function gpPressed(pad, spec) {
       if (spec == null || !pad) return false;
-      if (typeof spec === "string") spec = (pad.mapping === "standard" ? STD : RAW)[spec];
+      if (typeof spec === "string") spec = tableFor(mappingOf(pad, getConfig()))[spec];
       if (spec == null) return false;
       if (typeof spec === "number") return btnDown(pad.buttons[spec]);
       const v = pad.axes[spec.a];
@@ -266,7 +324,35 @@
       return !!dirOfKey(cfg, code) || activeButtons(cfg).some(function (b) { return b.key === code; });
     }
 
+    /**
+     * Detecta o analógico direito: cada driver numera os eixos de um jeito
+     * (Xbox por cabo no Linux = eixos 3/4; por Bluetooth = 2/3; navegador "padrão" = 2/3).
+     * O usuário empurra para a DIREITA, solta, e empurra para BAIXO; o eixo que mais
+     * mudou em cada passo vira o X e o Y do analógico (com o sinal certo).
+     */
+    function tickStick(pad) {
+      const c = capture;
+      if (!c.base) { c.base = pad.axes.slice(); c.step = 0; return; }
+      const delta = function (a) { return (pad.axes[a] || 0) - (c.base[a] || 0); };
+      if (c.waitRelease) {
+        let moving = false;
+        for (let a = 2; a < pad.axes.length; a++) if (Math.abs(delta(a)) > 0.3) moving = true;
+        if (!moving) { c.waitRelease = false; if (c.onStep) c.onStep(1); }
+        return;
+      }
+      let best = -1, bd = 0;
+      for (let a = 2; a < pad.axes.length; a++) {        // 0 e 1 são o analógico esquerdo
+        if (c.step === 1 && a === c.x) continue;
+        if (Math.abs(delta(a)) > Math.abs(bd)) { bd = delta(a); best = a; }
+      }
+      if (best < 0 || Math.abs(bd) < 0.6) return;
+      if (c.step === 0) { c.x = best; c.sx = bd > 0 ? 1 : -1; c.step = 1; c.waitRelease = true; return; }
+      const cb = c.cb; capture = null;
+      cb({ stick: { x: c.x, sx: c.sx, y: best, sy: bd > 0 ? 1 : -1, mapping: pad.mapping || "" } });
+    }
+
     function tickCapture(pad) {
+      if (capture && pad && capture.mode === "stick") { tickStick(pad); return; }
       if (!capture || !pad || capture.mode === "key") return;
       const anyDown = pad.buttons.some(btnDown);
       if (!capture.armed) {           // espera soltar tudo antes de capturar
@@ -274,17 +360,18 @@
         return;
       }
       for (let i = 0; i < pad.buttons.length; i++) {
-        if (btnDown(pad.buttons[i])) { const cb = capture.cb; capture = null; cb({ gp: i, mapping: pad.mapping }); return; }
+        if (btnDown(pad.buttons[i])) { const cb = capture.cb; capture = null; cb({ gp: i, mapping: mappingOf(pad, getConfig()) }); return; }
       }
-      // Eixos (gatilhos analógicos). Ignora o analógico esquerdo (0,1) e o hat (6,7).
+      // Eixos (gatilhos analógicos). Ignora os dois analógicos e o hat (6,7).
+      const rsAx = rawLayout(pad, getConfig()) === "xpad" ? [3, 4] : [2, 3];
       for (let a = 2; a < pad.axes.length; a++) {
-        if (a === 6 || a === 7) continue;
+        if (a === 6 || a === 7 || rsAx.indexOf(a) >= 0) continue;
         const delta = pad.axes[a] - capture.baseline[a];
         if (Math.abs(delta) > 0.6) {
           // limiar = meio do caminho entre o repouso e o valor apertado
           const t = +((capture.baseline[a] + pad.axes[a]) / 2).toFixed(2);
           const cb = capture.cb; capture = null;
-          cb({ gp: { a: a, t: t, s: delta > 0 ? 1 : -1 }, mapping: pad.mapping });
+          cb({ gp: { a: a, t: t, s: delta > 0 ? 1 : -1 }, mapping: mappingOf(pad, getConfig()) });
           return;
         }
       }
@@ -292,7 +379,7 @@
 
     return {
       onConnection: function (fn) { onConnection = fn; },
-      startCapture: function (cb, mode) { capture = { cb: cb, mode: mode || "any", armed: false, baseline: [] }; },
+      startCapture: function (cb, mode, onStep) { capture = { cb: cb, mode: mode || "any", armed: false, baseline: [], onStep: onStep }; },
       cancelCapture: function () { capture = null; },
       isCapturing: function () { return !!capture; },
       read: function () {
@@ -304,7 +391,7 @@
         const p = currentPad();
         tickCapture(p);
         const buttons = new Set();
-        let axes = { x: 0, y: 0 };
+        let axes = { x: 0, y: 0 }, raxes = { x: 0, y: 0 };
         if (p) {
           // D-pad (direcional digital)
           if (p.mapping === "standard") {
@@ -318,6 +405,9 @@
           }
           // Analógico esquerdo (eixos 0/1), com zona morta
           axes = { x: p.axes[0] || 0, y: p.axes[1] || 0 };
+          // Analógico direito: eixos 2/3 no mapeamento padrão; no driver xpad "cru" (Linux) são 3/4
+          // (o eixo 2 é o gatilho esquerdo). Só aparece no desenho, não conta como direção.
+          raxes = rightStickAxes(p, cfg);
           const a = N.axesToDirections(axes.x, axes.y, 0.5);
           Object.keys(a).forEach(function (k) { if (a[k]) stick[k] = true; });
         }
@@ -332,9 +422,9 @@
         Object.keys(dpadShown).forEach(function (k) { dpadShown[k] = kbd[k] || (src !== "stick" && dpad[k]); });
         if (src === "dpad") axes = { x: 0, y: 0 };
         activeButtons(cfg).forEach(function (b) {
-          if ((b.key && held.has(b.key)) || gpPressed(p, b.gp)) buttons.add(b.id);
+          if ((b.key && held.has(b.key)) || gpPressed(p, swapPhys(b.gp, cfg))) buttons.add(b.id);
         });
-        return { dirs: dirs, dpad: dpadShown, stick: stick, axes: axes, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
+        return { dirs: dirs, dpad: dpadShown, stick: stick, axes: axes, raxes: raxes, rawAxes: p ? Array.from(p.axes) : [], layout: p ? rawLayout(p, cfg) : null, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
       }
     };
   }
@@ -504,12 +594,12 @@
     }
 
     /* Analógicos: anel externo + topo (o esquerdo se move com as direções) */
-    let leftCap = null;
+    let leftCap = null, rightCap = null;
     [["ls", pos.ls], ["rs", pos.rs]].forEach(function (s) {
       el("circle", { cx: s[1][0], cy: s[1][1], r: 40, class: "pad2-stick-well" }, svg);
       el("circle", { cx: s[1][0], cy: s[1][1], r: 31, class: "pad2-stick-outer" }, svg);
       const cap = el("circle", { cx: s[1][0], cy: s[1][1], r: 21, class: "pad2-stick-inner" }, svg);
-      if (s[0] === "ls") leftCap = cap;
+      if (s[0] === "ls") leftCap = cap; else rightCap = cap;
     });
 
     /* Direcional: 4 teclas separadas, cada uma com uma setinha */
@@ -536,16 +626,19 @@
     });
 
     return function (dirs, state) {
-      const m = stickOffset(dirs, state);
+      const m = stickOffset(dirs, state), r = stickOffset(dirs, state, true);
       leftCap.setAttribute("cx", (pos.ls[0] + m.x * 9).toFixed(1));
       leftCap.setAttribute("cy", (pos.ls[1] + m.y * 9).toFixed(1));
+      rightCap.setAttribute("cx", (pos.rs[0] + r.x * 9).toFixed(1));
+      rightCap.setAttribute("cy", (pos.rs[1] + r.y * 9).toFixed(1));
     };
   }
   /** Deslocamento do analógico no desenho: posição real do eixo (com controle)
       ou, sem controle, só as setas do teclado (que contam como D-pad, não como analógico). */
-  function stickOffset(dirs, state) {
-    if (state && state.axes && (Math.abs(state.axes.x) > 0.08 || Math.abs(state.axes.y) > 0.08)) {
-      return { x: Math.max(-1, Math.min(1, state.axes.x)), y: Math.max(-1, Math.min(1, state.axes.y)) };
+  function stickOffset(dirs, state, right) {
+    const ax = state && (right ? state.raxes : state.axes);
+    if (ax && (Math.abs(ax.x) > 0.08 || Math.abs(ax.y) > 0.08)) {
+      return { x: Math.max(-1, Math.min(1, ax.x)), y: Math.max(-1, Math.min(1, ax.y)) };
     }
     return { x: 0, y: 0 };
   }
@@ -579,7 +672,7 @@
     const order = ["base", "LT", "RT", "LB", "RB"].concat(art.map(function (p) { return p.id; }).filter(function (id) {
       return ["base", "LT", "RT", "LB", "RB"].indexOf(id) < 0;
     }));
-    let leftStick = null;
+    let leftStick = null, rightStick = null;
     order.forEach(function (id) {
       const p = part[id]; if (!p) return;
       if (SHOULDER[id]) {
@@ -604,16 +697,24 @@
         }
       } else if (id === "LS") {
         leftStick = place(p, svg);
+      } else if (id === "RS") {
+        rightStick = place(p, svg);
       } else {
         place(p, svg);
       }
     });
 
     return function (dirs, state) {
-      if (!leftStick || !leftStick.svg) return;
-      const m = stickOffset(dirs, state);
-      leftStick.svg.setAttribute("x", (part.LS.x + m.x * 9).toFixed(1));
-      leftStick.svg.setAttribute("y", (part.LS.y + m.y * 9).toFixed(1));
+      if (leftStick && leftStick.svg) {
+        const m = stickOffset(dirs, state);
+        leftStick.svg.setAttribute("x", (part.LS.x + m.x * 9).toFixed(1));
+        leftStick.svg.setAttribute("y", (part.LS.y + m.y * 9).toFixed(1));
+      }
+      if (rightStick && rightStick.svg) {
+        const r = stickOffset(dirs, state, true);
+        rightStick.svg.setAttribute("x", (part.RS.x + r.x * 9).toFixed(1));
+        rightStick.svg.setAttribute("y", (part.RS.y + r.y * 9).toFixed(1));
+      }
     };
   }
 

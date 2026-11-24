@@ -137,6 +137,21 @@
             </select>
             <p class="form-text text-muted small mb-0" id="dirSourceHelp">Como o modo "D-pad / LS" dos controles de luta. O teclado sempre funciona.</p>
           </div>
+          <fieldset class="mb-3">
+            <legend class="form-label fs-6 mb-1">Ajustes do controle</legend>
+            <div class="form-check form-switch mb-1">
+              <input class="form-check-input" type="checkbox" role="switch" id="cfgSwapXY" aria-describedby="swapHelp">
+              <label class="form-check-label" for="cfgSwapXY">Trocar X e Y</label>
+            </div>
+            <div class="form-check form-switch mb-1">
+              <input class="form-check-input" type="checkbox" role="switch" id="cfgSwapAB" aria-describedby="swapHelp">
+              <label class="form-check-label" for="cfgSwapAB">Trocar A e B</label>
+            </div>
+            <p class="form-text text-muted small mb-2" id="swapHelp">Use se, ao apertar X no controle, acender o Y (ou A e B). Acontece com alguns drivers no Linux e com controles no modo Switch.</p>
+            <button type="button" class="btn btn-il-ghost btn-sm" id="btnDetectRS" aria-describedby="rsStatus">Detectar analógico direito</button>
+            <p class="form-text text-muted small mb-0 mt-1" id="rsStatus"></p>
+            <pre class="small text-muted mt-2 mb-0" id="axesReadout" style="white-space:pre-wrap">Sem controle.</pre>
+          </fieldset>
           <div class="mb-3">
             <label class="form-label" for="cfgButtonStyle">Estilo dos botões</label>
             <select class="form-select" id="cfgButtonStyle">
