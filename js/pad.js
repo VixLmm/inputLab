@@ -94,6 +94,11 @@
 
   const UNUSED = "#5B6275";
 
+  // Botões de sistema: aparecem em todos os layouts e acendem com o botão físico
+  // (nome físico → rótulo). L3/R3 = apertar o analógico esquerdo/direito.
+  const SYS = [["VIEW", "SELECT"], ["MENU", "START"], ["LS", "L3"], ["RS", "R3"]];
+  const SYS_COLOR = "#FFC53D";   // cor padrão; o usuário troca em cfg.sysColor
+
   /* ---------- Geometria padrão ---------- */
   // Curva "Vewlix": primeira coluna mais baixa, como nos gabinetes de arcade
   function gridPos(layout, row, col) {
@@ -135,7 +140,7 @@
 
   function defaultConfig() {
     return applyPreset({
-      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8", buttonStyle: "outline", buttonFill: "#0B0D10", baseColor: null, baseColorPick: "#242836", trail: true, dirSource: "both", swapXY: false, swapAB: false, rsAxes: null, stickLayout2: true,
+      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8", buttonStyle: "outline", buttonFill: "#0B0D10", baseColor: null, baseColorPick: "#242836", trail: true, dirSource: "both", swapXY: false, swapAB: false, rsAxes: null, sysColor: SYS_COLOR, stickLayout2: true,
       dirKeys: { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD" },
       stick: { buttons: [] },
       leverless: { buttons: [], dirs: { left: { x: 82, y: 172 }, down: { x: 152, y: 152 }, right: { x: 222, y: 168 }, up: { x: 318, y: 276 } } },
@@ -149,7 +154,7 @@
     if (!c || c.version !== 2) return d;
     try {
       const out = JSON.parse(JSON.stringify(c));
-      ["notation", "side", "history", "layout", "preset", "buttonStyle", "buttonFill", "baseColor", "baseColorPick", "trail", "dirSource", "swapXY", "swapAB", "rsAxes"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
+      ["notation", "side", "history", "layout", "preset", "buttonStyle", "buttonFill", "baseColor", "baseColorPick", "trail", "dirSource", "swapXY", "swapAB", "rsAxes", "sysColor"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
       out.dirKeys = Object.assign({}, d.dirKeys, out.dirKeys || {});
       if (["stick", "leverless", "pad"].indexOf(out.layout) < 0) out.layout = "stick";
       out.stick = out.stick && Array.isArray(out.stick.buttons) ? out.stick : d.stick;
@@ -448,7 +453,9 @@
         activeButtons(cfg).forEach(function (b) {
           if ((b.key && held.has(b.key)) || gpPressed(p, swapPhys(b.gp, cfg))) buttons.add(b.id);
         });
-        return { dirs: dirs, dpad: dpadShown, stick: stick, axes: axes, raxes: raxes, rawAxes: p ? Array.from(p.axes) : [], rawButtons: p ? Array.from(p.buttons, function (b) { return b.value; }) : [], layout: p ? rawLayout(p, cfg) : null, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
+        const sys = new Set();
+        if (p) SYS.forEach(function (n) { if (gpPressed(p, n[0])) sys.add(n[0]); });
+        return { dirs: dirs, dpad: dpadShown, stick: stick, axes: axes, raxes: raxes, sys: sys, rawAxes: p ? Array.from(p.axes) : [], rawButtons: p ? Array.from(p.buttons, function (b) { return b.value; }) : [], layout: p ? rawLayout(p, cfg) : null, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
       }
     };
   }
@@ -496,11 +503,23 @@
     return { g: g, shape: c };
   }
 
+  /** Fileira SELECT · START · L3 · R3 no alto do arcade e do leverless. */
+  function sysColor(cfg) { return /^#[0-9a-f]{6}$/i.test(cfg && cfg.sysColor) ? cfg.sysColor : SYS_COLOR; }
+
+  function drawSysRow(svg, refs, cfg) {
+    SYS.forEach(function (n, i) {
+      const cx = 470 + i * 58, cy = 64;
+      const g = el("g", { class: "sys-btn", style: colorVars(sysColor(cfg)) }, svg);
+      refs.sys[n[0]] = el("rect", { x: cx - 25, y: cy - 10, width: 50, height: 20, rx: 10, class: "fn-btn" }, g);
+      text(g, cx, cy + 1, n[1], "#D5D8DE", 9).classList.add("sys-label");
+    });
+  }
+
   function drawStick(svg, cfg, refs, opts) {
     frame(svg, 30, cfg);
     const CX = 165, CY = 184, REACH = 40;
-    // Botões pequenos de função (decorativos), como no arcade do Trailpad
-    [540, 572, 604, 636].forEach(function (x) { el("circle", { cx: x, cy: 66, r: 11, class: "fn-btn" }, svg); });
+    // Botões pequenos de função, como no arcade do Trailpad
+    drawSysRow(svg, refs, cfg);
     // Gate: área escura, aro e furo central
     el("circle", { cx: CX, cy: CY, r: 66, class: "gate" }, svg);
     el("circle", { cx: CX, cy: CY, r: 61, class: "gate-rim" }, svg);
@@ -562,6 +581,7 @@
       r.shape.classList.add("dir-shape");
       refs.dir[d] = r.shape;
     });
+    drawSysRow(svg, refs, cfg);
     cfg.leverless.buttons.forEach(function (b) { refs.btn[b.id] = roundButton(svg, b, opts).shape; });
     return null;
   }
@@ -719,10 +739,28 @@
         } else {
           text(g, cx, cy + 1, names[id], "#D5D8DE", rr * 1.05).classList.add("tp-letter");
         }
-      } else if (id === "LS") {
-        leftStick = place(p, svg);
-      } else if (id === "RS") {
-        rightStick = place(p, svg);
+      } else if (id === "LS" || id === "RS") {
+        // L3/R3: o analógico acende quando é apertado
+        const r = place(p, svg, { style: colorVars(sysColor(cfg)) });
+        refs.sys[id] = r.svg;
+        if (id === "LS") leftStick = r; else rightStick = r;
+      } else if (id === "View" || id === "Menu") {
+        const key = id === "View" ? "VIEW" : "MENU";
+        if (p.svg) {
+          refs.sys[key] = place(p, svg, { style: colorVars(sysColor(cfg)) }).svg;
+        } else {
+          // O desenho do Xbox não traz esses botões: círculo com o ícone (dois quadrados / três traços)
+          const g = el("g", { class: "tp-part sys-btn tp-" + id, style: colorVars(sysColor(cfg)) }, svg);
+          const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+          refs.sys[key] = el("circle", { cx: cx, cy: cy, r: p.w / 2, class: "fn-btn" }, g);
+          const ic = el("g", { class: "sys-icon" }, g);
+          if (id === "View") {
+            el("rect", { x: cx - 5, y: cy - 4, width: 7, height: 6, rx: 1 }, ic);
+            el("rect", { x: cx - 2, y: cy - 1, width: 7, height: 6, rx: 1 }, ic);
+          } else {
+            [-3, 0, 3].forEach(function (dy) { el("line", { x1: cx - 5, y1: cy + dy, x2: cx + 5, y2: cy + dy }, ic); });
+          }
+        }
       } else {
         place(p, svg);
       }
@@ -751,7 +789,7 @@
     container.innerHTML = "";
     const names = { stick: "arcade stick", leverless: "controle leverless", pad: "controle " + (cfg.pad.style === "ps" ? "estilo PlayStation" : "estilo Xbox") };
     const svg = el("svg", { viewBox: "0 0 720 360", class: "il-pad w-100" + (cfg.buttonStyle === "filled" ? "" : " outline"), style: "--il-btn-fill:" + (cfg.buttonFill || "#0B0D10") + ";--il-btn-label:" + labelColor(cfg.buttonFill || "#0B0D10"), role: "img", "aria-label": "Visualização do " + names[cfg.layout] });
-    const refs = { btn: {}, dir: {} };
+    const refs = { btn: {}, dir: {}, sys: {} };
     let moveDirs = null;
     if (cfg.layout === "stick") moveDirs = drawStick(svg, cfg, refs, opts);
     else if (cfg.layout === "leverless") moveDirs = drawLeverless(svg, cfg, refs, opts);
@@ -794,6 +832,7 @@
           if (shape.parentNode && shape.parentNode.tagName === "g") shape.parentNode.classList.toggle("is-pressed", on);
         };
         Object.keys(refs.btn).forEach(function (id) { mark(refs.btn[id], state.buttons.has(id)); });
+        Object.keys(refs.sys).forEach(function (id) { mark(refs.sys[id], !!(state.sys && state.sys.has(id))); });
         const lit = cfg.layout === "pad" && state.dpad ? state.dpad : state.dirs;
         Object.keys(refs.dir).forEach(function (d) { mark(refs.dir[d], !!lit[d]); });
         if (moveDirs) moveDirs(state.dirs, state);

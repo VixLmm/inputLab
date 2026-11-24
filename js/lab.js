@@ -306,6 +306,7 @@
     $("cfgBaseColor").value = config.baseColor || config.baseColorPick || "#242836";
     $("cfgBaseColor").disabled = !config.baseColor;
     $("cfgTrail").checked = config.trail !== false;
+    $("cfgSysColor").value = config.sysColor || "#FFC53D";
     $("cfgEditMode").checked = editMode;
   }
 
@@ -351,6 +352,7 @@
       redrawPad(); renderList(); renderSelectedEditor(); persist();
     });
     $("cfgTrail").addEventListener("change", function (e) { config.trail = e.target.checked; persist(); });
+    $("cfgSysColor").addEventListener("input", function (e) { config.sysColor = e.target.value; redrawPad(); persist(); });
     $("dirKeyList").addEventListener("click", function (e) {
       const btn = e.target.closest("[data-dir]"); if (btn) startMapping("dir:" + btn.getAttribute("data-dir"), "key");
     });

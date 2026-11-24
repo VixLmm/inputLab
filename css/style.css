@@ -408,3 +408,11 @@ h1, h2, h3, .h1, .h2, .h3, .h4, .h5, .h6, .il-display, .il-navbar .navbar-brand 
 .il-pad .btn-label.tp-letter { fill: #D5D8DE; font-weight: 600; font-family: var(--il-font-body, sans-serif); }
 .il-pad g.is-pressed .btn-label.tp-letter { fill: var(--lc); }
 .il-pad .tp-sym { pointer-events: none; }
+
+/* 20. Botões de sistema (SELECT, START, L3, R3) */
+.il-pad .sys-btn .fn-btn { stroke-width: 2.5; }
+.il-pad .btn-label.sys-label { fill: #D5D8DE; font-size: 9px; font-weight: 700; letter-spacing: .04em; }
+.il-pad g.sys-btn.is-pressed .fn-btn { fill: var(--c); }
+.il-pad g.sys-btn.is-pressed .btn-label.sys-label { fill: var(--lc); }
+.il-pad .sys-icon rect, .il-pad .sys-icon line { fill: none; stroke: #D5D8DE; stroke-width: 1.6; }
+.il-pad g.sys-btn.is-pressed .sys-icon rect, .il-pad g.sys-btn.is-pressed .sys-icon line { stroke: var(--lc); }
