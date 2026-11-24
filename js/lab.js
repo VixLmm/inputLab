@@ -171,13 +171,15 @@
     const f = function (v) { return (v >= 0 ? "+" : "") + v.toFixed(2); };
     out.textContent = "Leitura: " + (LAYOUT_NAMES[s.layout] || s.layout) + "\n" +
       s.rawAxes.map(function (v, i) { return "eixo " + i + ": " + f(v); }).join("   ") + "\n" +
+      "botões (valor): " + s.rawButtons.map(function (v, i) { return i + ":" + v.toFixed(2); }).join(" ") + "\n" +
       "analógico direito lido: x " + f(s.raxes.x) + "  y " + f(s.raxes.y);
   }
 
   /* ---------- Analógico direito ---------- */
   function rsText() {
     const r = config.rsAxes;
-    return r ? "Detectado: eixos " + r.x + " e " + r.y + " (" + (r.mapping === "standard" ? "mapeamento padrão" : "mapeamento cru") + ")." : "Usando os eixos padrão.";
+    const nome = function (k) { return typeof k === "number" ? "eixo " + k : "botão " + String(k).slice(1); };
+    return r ? "Detectado: " + nome(r.x) + " e " + nome(r.y) + " (" + (r.mapping === "standard" ? "mapeamento padrão" : "mapeamento cru") + ")." : "Usando os eixos padrão.";
   }
   function detectRightStick() {
     const out = $("rsStatus");

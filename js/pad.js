@@ -295,18 +295,35 @@
       return null;
     }
     function btnDown(btn) { return !!btn && (btn.pressed || btn.value > 0.5); }
+    /** Lê um "canal": número = eixo (-1..1); "b6" = valor do botão 6 convertido para -1..1. */
+    function chanValue(pad, k) {
+      if (typeof k === "number") return pad.axes[k];
+      const b = pad.buttons[+String(k).slice(1)];
+      return b ? b.value * 2 - 1 : null;
+    }
 
     /**
      * Analógico direito. Se o usuário usou "Detectar analógico direito" neste tipo de
      * mapeamento, usa os eixos detectados; senão, o palpite: 2/3 no padrão, 3/4 no xpad cru.
      */
     function rightStickAxes(p, cfg) {
-      const r = cfg.rsAxes;
-      if (r && r.mapping === (p.mapping || "") && p.axes[r.x] != null && p.axes[r.y] != null) {
-        return { x: r.sx * p.axes[r.x], y: r.sy * p.axes[r.y] };
+      const r = rsFor(p, cfg);
+      if (r && chanValue(p, r.x) != null && chanValue(p, r.y) != null) {
+        return { x: r.sx * chanValue(p, r.x), y: r.sy * chanValue(p, r.y) };
       }
       if (p.mapping === "standard" || rawLayout(p, cfg) === "generic") return { x: p.axes[2] || 0, y: p.axes[3] || 0 };
       return p.axes.length >= 5 ? { x: p.axes[3] || 0, y: p.axes[4] || 0 } : { x: 0, y: 0 };
+    }
+
+    /** Analógico direito detectado para este tipo de mapeamento (ou null). */
+    function rsFor(p, cfg) {
+      const r = cfg && cfg.rsAxes;
+      return r && p && r.mapping === (p.mapping || "") ? r : null;
+    }
+    /** Botões que, neste controle, são na verdade o analógico direito (não contam como botão). */
+    function rsButtons(p, cfg) {
+      const r = rsFor(p, cfg);
+      return r ? [r.x, r.y].filter(function (k) { return typeof k === "string"; }).map(function (k) { return +k.slice(1); }) : [];
     }
 
     /** Resolve "RT", 7 ou {a:5,t:0,s:1} para o estado atual do controle. */
@@ -314,7 +331,7 @@
       if (spec == null || !pad) return false;
       if (typeof spec === "string") spec = tableFor(mappingOf(pad, getConfig()))[spec];
       if (spec == null) return false;
-      if (typeof spec === "number") return btnDown(pad.buttons[spec]);
+      if (typeof spec === "number") return rsButtons(pad, getConfig()).indexOf(spec) < 0 && btnDown(pad.buttons[spec]);
       const v = pad.axes[spec.a];
       return v != null && (spec.s || 1) * (v - spec.t) > 0;
     }
@@ -332,20 +349,25 @@
      */
     function tickStick(pad) {
       const c = capture;
-      if (!c.base) { c.base = pad.axes.slice(); c.step = 0; return; }
-      const delta = function (a) { return (pad.axes[a] || 0) - (c.base[a] || 0); };
+      // Canais candidatos: eixos 2+ (0 e 1 são o analógico esquerdo) e também o valor dos
+      // botões, porque alguns navegadores entregam o analógico direito de certos controles
+      // (ex.: 8BitDo no Firefox) como se fosse o "quanto apertado" dos gatilhos.
+      const chans = [];
+      for (let a = 2; a < pad.axes.length; a++) chans.push(a);
+      for (let b = 0; b < pad.buttons.length; b++) chans.push("b" + b);
+      if (!c.base) { c.base = {}; chans.forEach(function (k) { c.base[k] = chanValue(pad, k) || 0; }); c.step = 0; return; }
+      const delta = function (k) { return (chanValue(pad, k) || 0) - (c.base[k] || 0); };
       if (c.waitRelease) {
-        let moving = false;
-        for (let a = 2; a < pad.axes.length; a++) if (Math.abs(delta(a)) > 0.3) moving = true;
+        const moving = chans.some(function (k) { return Math.abs(delta(k)) > 0.3; });
         if (!moving) { c.waitRelease = false; if (c.onStep) c.onStep(1); }
         return;
       }
       let best = -1, bd = 0;
-      for (let a = 2; a < pad.axes.length; a++) {        // 0 e 1 são o analógico esquerdo
-        if (c.step === 1 && a === c.x) continue;
-        if (Math.abs(delta(a)) > Math.abs(bd)) { bd = delta(a); best = a; }
-      }
-      if (best < 0 || Math.abs(bd) < 0.6) return;
+      chans.forEach(function (k) {
+        if (c.step === 1 && k === c.x) return;
+        if (Math.abs(delta(k)) > Math.abs(bd)) { bd = delta(k); best = k; }
+      });
+      if (best === -1 || Math.abs(bd) < 0.6) return;
       if (c.step === 0) { c.x = best; c.sx = bd > 0 ? 1 : -1; c.step = 1; c.waitRelease = true; return; }
       const cb = c.cb; capture = null;
       cb({ stick: { x: c.x, sx: c.sx, y: best, sy: bd > 0 ? 1 : -1, mapping: pad.mapping || "" } });
@@ -354,16 +376,18 @@
     function tickCapture(pad) {
       if (capture && pad && capture.mode === "stick") { tickStick(pad); return; }
       if (!capture || !pad || capture.mode === "key") return;
-      const anyDown = pad.buttons.some(btnDown);
+      const anyDown = pad.buttons.some(function (b, i) { return btnDown(b) && rsButtons(pad, getConfig()).indexOf(i) < 0; });
       if (!capture.armed) {           // espera soltar tudo antes de capturar
         if (!anyDown) { capture.armed = true; capture.baseline = pad.axes.slice(); }
         return;
       }
+      const skipB = rsButtons(pad, getConfig());
       for (let i = 0; i < pad.buttons.length; i++) {
-        if (btnDown(pad.buttons[i])) { const cb = capture.cb; capture = null; cb({ gp: i, mapping: mappingOf(pad, getConfig()) }); return; }
+        if (skipB.indexOf(i) < 0 && btnDown(pad.buttons[i])) { const cb = capture.cb; capture = null; cb({ gp: i, mapping: mappingOf(pad, getConfig()) }); return; }
       }
       // Eixos (gatilhos analógicos). Ignora os dois analógicos e o hat (6,7).
-      const rsAx = rawLayout(pad, getConfig()) === "xpad" ? [3, 4] : [2, 3];
+      const rsCfg = rsFor(pad, getConfig());
+      const rsAx = rsCfg ? [rsCfg.x, rsCfg.y] : rawLayout(pad, getConfig()) === "xpad" ? [3, 4] : [2, 3];
       for (let a = 2; a < pad.axes.length; a++) {
         if (a === 6 || a === 7 || rsAx.indexOf(a) >= 0) continue;
         const delta = pad.axes[a] - capture.baseline[a];
@@ -424,7 +448,7 @@
         activeButtons(cfg).forEach(function (b) {
           if ((b.key && held.has(b.key)) || gpPressed(p, swapPhys(b.gp, cfg))) buttons.add(b.id);
         });
-        return { dirs: dirs, dpad: dpadShown, stick: stick, axes: axes, raxes: raxes, rawAxes: p ? Array.from(p.axes) : [], layout: p ? rawLayout(p, cfg) : null, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
+        return { dirs: dirs, dpad: dpadShown, stick: stick, axes: axes, raxes: raxes, rawAxes: p ? Array.from(p.axes) : [], rawButtons: p ? Array.from(p.buttons, function (b) { return b.value; }) : [], layout: p ? rawLayout(p, cfg) : null, buttons: buttons, gamepad: p ? p.id : null, mapping: p ? p.mapping : null };
       }
     };
   }
