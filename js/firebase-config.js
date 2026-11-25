@@ -8,10 +8,10 @@
    é o servidor do Firebase (senha com hash, limite de tentativas).
    ========================================================= */
 export const firebaseConfig = {
-  apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI",
-  projectId: "COLE_AQUI",
-  appId: "COLE_AQUI"
+  apiKey: "AIzaSyDGJ2yTuXBiH3CgPQ9G4rxBd4ugyFmfc8Y",
+  authDomain: "inputlab-ff356.firebaseapp.com",
+  projectId: "inputlab-ff356",
+  appId: "1:78324521143:web:fbe7b953bb56c6686b1532"
 };
 
 /* Emulador local do Firebase (só para testes no computador).
