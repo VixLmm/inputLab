@@ -262,7 +262,11 @@
   }
 
   /* ---------------- Leitura de inputs ---------------- */
-  function InputReader(getConfig) {
+  /**
+   * opts.keepScroll: não segura as setas/espaço (usado no Início, onde a página precisa rolar).
+   */
+  function InputReader(getConfig, opts) {
+    const keepScroll = !!(opts && opts.keepScroll);
     const keys = new Set();
     const tapped = new Set();   // teclas apertadas e soltas entre dois quadros (não se perdem)
     let gamepadIndex = null;
@@ -285,7 +289,7 @@
       if (isTyping(e)) return;
       keys.add(e.code); tapped.add(e.code);
       // setas e espaço não rolam a página enquanto estiverem sendo usados como controle
-      if (e.code.indexOf("Arrow") === 0 || (e.code === "Space" && isMapped(e.code))) e.preventDefault();
+      if (!keepScroll && (e.code.indexOf("Arrow") === 0 || (e.code === "Space" && isMapped(e.code)))) e.preventDefault();
     });
     window.addEventListener("keyup", function (e) { keys.delete(e.code); });
     window.addEventListener("blur", function () { keys.clear(); });

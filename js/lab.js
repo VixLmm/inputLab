@@ -78,7 +78,6 @@
     $("btnAddButton").hidden = isPad;
     $("padAddNote").hidden = !isPad;
     $("editModeBox").hidden = isPad;
-    $("padStyleBox").hidden = !isPad;
     $("baseBox").hidden = isPad;
     $("trailBox").hidden = config.layout !== "stick";
     $("buttonCount").textContent = buttons().filter(function (b) { return b.label !== ""; }).length;
@@ -287,11 +286,13 @@
     $("overlayOpen").href = url;
     const last = copiedUrl();
     $("overlayStale").hidden = !last || last === url;
+    $("obsTabDot").hidden = $("overlayStale").hidden;   // bolinha na aba OBS quando o link copiado ficou velho
   }
 
   function fillForm() {
-    $("cfgLayout").value = config.layout;
-    $("cfgPadStyle").value = config.pad.style;
+    // Barra rápida: Arcade · Leverless · PlayStation · Xbox
+    const kind = config.layout === "pad" ? "pad:" + config.pad.style : config.layout;
+    document.querySelectorAll('input[name="cfgKind"]').forEach(function (r) { r.checked = r.value === kind; });
     $("cfgPreset").value = config.preset in P.GAME_PRESETS ? config.preset : "generic8";
     $("cfgNotation").value = config.notation;
     $("cfgDirSource").value = config.dirSource || "both";
@@ -324,8 +325,16 @@
     fillForm(); fullRefresh();
     Auth.onChange(renderPresets);   // mostra os presets quando o login termina de carregar
 
-    $("cfgLayout").addEventListener("change", function (e) { config.layout = e.target.value; selectedId = null; fullRefresh(); });
-    $("cfgPadStyle").addEventListener("change", function (e) { config.pad.style = e.target.value; fullRefresh(); });
+    document.querySelectorAll('input[name="cfgKind"]').forEach(function (r) {
+      r.addEventListener("change", function (e) {
+        const v = e.target.value.split(":");          // "stick", "leverless", "pad:ps", "pad:xbox"
+        config.layout = v[0];
+        if (v[1]) config.pad.style = v[1];
+        selectedId = null; fullRefresh();
+      });
+    });
+    // Link para lab.html#overlay abre direto a aba do OBS
+    if (location.hash === "#overlay" && window.bootstrap) bootstrap.Tab.getOrCreateInstance($("tab-obs")).show();
     $("btnApplyPreset").addEventListener("click", function () {
       const key = $("cfgPreset").value;
       P.applyPreset(config, key); selectedId = null; fullRefresh();
@@ -421,6 +430,7 @@
         function () {
           try { localStorage.setItem(COPIED_KEY, input.value); } catch (e) {}
           $("overlayStale").hidden = true;
+          $("obsTabDot").hidden = true;
           announce("Link do overlay copiado"); $("btnCopyOverlay").innerHTML = '<i class="bi bi-check2" aria-hidden="true"></i> Copiado';
         },
         function () { input.select(); document.execCommand("copy"); }

@@ -55,6 +55,41 @@
 
     <div class="row g-4">
       <div class="col-lg-8">
+        <div class="il-quick mb-3">
+          <fieldset class="il-quick-kind">
+            <legend class="visually-hidden">Tipo de controle</legend>
+            <input type="radio" class="btn-check" name="cfgKind" id="kindStick" value="stick"><label class="btn il-seg" for="kindStick">Arcade</label>
+            <input type="radio" class="btn-check" name="cfgKind" id="kindLeverless" value="leverless"><label class="btn il-seg" for="kindLeverless">Leverless</label>
+            <input type="radio" class="btn-check" name="cfgKind" id="kindPs" value="pad:ps"><label class="btn il-seg" for="kindPs">PlayStation</label>
+            <input type="radio" class="btn-check" name="cfgKind" id="kindXbox" value="pad:xbox"><label class="btn il-seg" for="kindXbox">Xbox</label>
+          </fieldset>
+          <div class="il-quick-preset">
+            <label class="visually-hidden" for="cfgPreset">Preset de jogo</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text" aria-hidden="true">Jogo</span>
+              <select class="form-select" id="cfgPreset" aria-describedby="presetHelp"></select>
+              <button class="btn btn-il-p2" type="button" id="btnApplyPreset">Aplicar</button>
+            </div>
+            <p class="visually-hidden" id="presetHelp">Aplicar substitui rótulos, cores e posições dos botões nos três tipos de controle.</p>
+          </div>
+          <div class="dropdown">
+            <button class="btn btn-il-ghost btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="bi bi-bookmark" aria-hidden="true"></i> Meus presets</button>
+            <div class="dropdown-menu dropdown-menu-end p-0">
+        <div class="p-3" style="width:min(22rem,90vw)" aria-labelledby="presetTitle" role="group">
+          <h2 class="h6 fw-bold" id="presetTitle">Meus presets</h2>
+          <p class="text-muted small mb-0" id="presetLoginHint"><a href="login.html">Entre na sua conta</a> para salvar presets. Sem conta, sua última configuração continua salva neste navegador.</p>
+          <div id="presetSaveBox" hidden>
+            <form class="d-flex gap-2 mb-3" id="presetForm" novalidate>
+              <label class="visually-hidden" for="presetName">Nome do preset</label>
+              <input class="form-control form-control-sm" id="presetName" placeholder="Ex.: SF6 no stick" maxlength="30" required>
+              <button class="btn btn-il-p2 btn-sm" type="submit">Salvar</button>
+            </form>
+            <ul class="list-group list-group-flush" id="presetList"></ul>
+          </div>
+        </div>
+            </div>
+          </div>
+        </div>
         <div class="il-stage p-3 p-md-4 mb-4" id="stageBox">
           <div id="padStage"></div>
           <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-2">
@@ -93,65 +128,15 @@
       </div>
 
       <div class="col-lg-4">
-        <form class="il-card p-4 mb-4" id="configForm" aria-labelledby="cfgTitle" novalidate onsubmit="return false">
-          <h2 class="h5 fw-bold" id="cfgTitle">Personalizar</h2>
-          <div class="row g-3 mb-3">
-            <div class="col-7">
-              <label class="form-label" for="cfgLayout">Tipo de controle</label>
-              <select class="form-select" id="cfgLayout">
-                <option value="stick">Arcade stick</option>
-                <option value="leverless">Leverless / Hitbox</option>
-                <option value="pad">Controle (pad)</option>
-              </select>
-            </div>
-            <div class="col-5" id="padStyleBox">
-              <label class="form-label" for="cfgPadStyle">Modelo</label>
-              <select class="form-select" id="cfgPadStyle">
-                <option value="xbox">Estilo Xbox</option>
-                <option value="ps">Estilo PlayStation</option>
-              </select>
-            </div>
-          </div>
-          <label class="form-label" for="cfgPreset">Preset de jogo</label>
-          <div class="input-group mb-1">
-            <select class="form-select" id="cfgPreset" aria-describedby="presetHelp"></select>
-            <button class="btn btn-il-p2" type="button" id="btnApplyPreset">Aplicar</button>
-          </div>
-          <p class="form-text text-muted small mb-3" id="presetHelp">Substitui rótulos, cores e posições dos botões nos três tipos de controle.</p>
-          <div class="row g-3 mb-3">
-            <div class="col-6">
-              <label class="form-label" for="cfgNotation">Notação</label>
-              <select class="form-select" id="cfgNotation"><option value="numpad">Numpad</option><option value="arrows">Setas</option></select>
-            </div>
-            <div class="col-6">
-              <label class="form-label" for="cfgSide">Lado</label>
-              <select class="form-select" id="cfgSide"><option value="p1">P1 →</option><option value="p2">P2 ←</option></select>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="cfgDirSource">Direções vêm de</label>
-            <select class="form-select" id="cfgDirSource" aria-describedby="dirSourceHelp">
-              <option value="both">D-pad e analógico</option>
-              <option value="dpad">Só o D-pad</option>
-              <option value="stick">Só o analógico esquerdo</option>
-            </select>
-            <p class="form-text text-muted small mb-0" id="dirSourceHelp">Como o modo "D-pad / LS" dos controles de luta. O teclado sempre funciona.</p>
-          </div>
-          <fieldset class="mb-3">
-            <legend class="form-label fs-6 mb-1">Ajustes do controle</legend>
-            <div class="form-check form-switch mb-1">
-              <input class="form-check-input" type="checkbox" role="switch" id="cfgSwapXY" aria-describedby="swapHelp">
-              <label class="form-check-label" for="cfgSwapXY">Trocar X e Y</label>
-            </div>
-            <div class="form-check form-switch mb-1">
-              <input class="form-check-input" type="checkbox" role="switch" id="cfgSwapAB" aria-describedby="swapHelp">
-              <label class="form-check-label" for="cfgSwapAB">Trocar A e B</label>
-            </div>
-            <p class="form-text text-muted small mb-2" id="swapHelp">Use se, ao apertar X no controle, acender o Y (ou A e B). Acontece com alguns drivers no Linux e com controles no modo Switch.</p>
-            <button type="button" class="btn btn-il-ghost btn-sm" id="btnDetectRS" aria-describedby="rsStatus">Detectar analógico direito</button>
-            <p class="form-text text-muted small mb-0 mt-1" id="rsStatus"></p>
-            <pre class="small text-muted mt-2 mb-0" id="axesReadout" style="white-space:pre-wrap">Sem controle.</pre>
-          </fieldset>
+        <form class="il-card il-tabs-card" id="configForm" aria-label="Personalizar o controle" novalidate onsubmit="return false">
+          <ul class="nav il-tabs" role="tablist">
+            <li class="nav-item" role="presentation"><button class="nav-link active" id="tab-visual" data-bs-toggle="tab" data-bs-target="#pane-visual" type="button" role="tab" aria-controls="pane-visual" aria-selected="true">Visual</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="tab-botoes" data-bs-toggle="tab" data-bs-target="#pane-botoes" type="button" role="tab" aria-controls="pane-botoes" aria-selected="false">Botões</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="tab-controle" data-bs-toggle="tab" data-bs-target="#pane-controle" type="button" role="tab" aria-controls="pane-controle" aria-selected="false">Controle</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="tab-obs" data-bs-toggle="tab" data-bs-target="#pane-obs" type="button" role="tab" aria-controls="pane-obs" aria-selected="false">OBS <span class="il-tab-dot" id="obsTabDot" hidden><span class="visually-hidden">(link desatualizado)</span></span></button></li>
+          </ul>
+          <div class="tab-content p-4">
+            <div class="tab-pane fade show active" id="pane-visual" role="tabpanel" aria-labelledby="tab-visual" tabindex="0">
           <div class="mb-3">
             <label class="form-label" for="cfgButtonStyle">Estilo dos botões</label>
             <select class="form-select" id="cfgButtonStyle">
@@ -187,7 +172,8 @@
             <input class="form-check-input" type="checkbox" role="switch" id="cfgHistory">
             <label class="form-check-label" for="cfgHistory">Mostrar histórico</label>
           </div>
-
+            </div>
+            <div class="tab-pane fade" id="pane-botoes" role="tabpanel" aria-labelledby="tab-botoes" tabindex="0">
           <fieldset>
             <legend class="form-label fs-6 d-flex justify-content-between align-items-center w-100">
               <span>Botões (<span id="buttonCount">8</span>)</span>
@@ -216,23 +202,46 @@
             <p class="small text-muted mb-0" id="padAddNote" hidden><i class="bi bi-info-circle" aria-hidden="true"></i> No pad, os botões seguem o controle físico. Deixe o rótulo vazio para marcar um botão como “sem uso”.</p>
           </fieldset>
           <button class="btn btn-il-ghost btn-sm mt-3" type="button" id="btnReset"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restaurar padrão</button>
-        </form>
-
-        <section class="il-card p-4 mb-4" aria-labelledby="presetTitle">
-          <h2 class="h5 fw-bold" id="presetTitle">Meus presets</h2>
-          <p class="text-muted small mb-0" id="presetLoginHint"><a href="login.html">Entre na sua conta</a> para salvar presets. Sem conta, sua última configuração continua salva neste navegador.</p>
-          <div id="presetSaveBox" hidden>
-            <form class="d-flex gap-2 mb-3" id="presetForm" novalidate>
-              <label class="visually-hidden" for="presetName">Nome do preset</label>
-              <input class="form-control form-control-sm" id="presetName" placeholder="Ex.: SF6 no stick" maxlength="30" required>
-              <button class="btn btn-il-p2 btn-sm" type="submit">Salvar</button>
-            </form>
-            <ul class="list-group list-group-flush" id="presetList"></ul>
+            </div>
+            <div class="tab-pane fade" id="pane-controle" role="tabpanel" aria-labelledby="tab-controle" tabindex="0">
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="cfgNotation">Notação</label>
+              <select class="form-select" id="cfgNotation"><option value="numpad">Numpad</option><option value="arrows">Setas</option></select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="cfgSide">Lado</label>
+              <select class="form-select" id="cfgSide"><option value="p1">P1 →</option><option value="p2">P2 ←</option></select>
+            </div>
           </div>
-        </section>
-
-        <section class="il-card p-4" id="overlay" aria-labelledby="overlayTitle">
-          <h2 class="h5 fw-bold" id="overlayTitle">Overlay para OBS</h2>
+          <div class="mb-3">
+            <label class="form-label" for="cfgDirSource">Direções vêm de</label>
+            <select class="form-select" id="cfgDirSource" aria-describedby="dirSourceHelp">
+              <option value="both">D-pad e analógico</option>
+              <option value="dpad">Só o D-pad</option>
+              <option value="stick">Só o analógico esquerdo</option>
+            </select>
+            <p class="form-text text-muted small mb-0" id="dirSourceHelp">Como o modo "D-pad / LS" dos controles de luta. O teclado sempre funciona.</p>
+          </div>
+          <fieldset class="mb-3">
+            <legend class="form-label fs-6 mb-1">Ajustes do controle</legend>
+            <div class="form-check form-switch mb-1">
+              <input class="form-check-input" type="checkbox" role="switch" id="cfgSwapXY" aria-describedby="swapHelp">
+              <label class="form-check-label" for="cfgSwapXY">Trocar X e Y</label>
+            </div>
+            <div class="form-check form-switch mb-1">
+              <input class="form-check-input" type="checkbox" role="switch" id="cfgSwapAB" aria-describedby="swapHelp">
+              <label class="form-check-label" for="cfgSwapAB">Trocar A e B</label>
+            </div>
+            <p class="form-text text-muted small mb-2" id="swapHelp">Use se, ao apertar X no controle, acender o Y (ou A e B). Acontece com alguns drivers no Linux e com controles no modo Switch.</p>
+            <button type="button" class="btn btn-il-ghost btn-sm" id="btnDetectRS" aria-describedby="rsStatus">Detectar analógico direito</button>
+            <p class="form-text text-muted small mb-0 mt-1" id="rsStatus"></p>
+            <pre class="small text-muted mt-2 mb-0" id="axesReadout" style="white-space:pre-wrap">Sem controle.</pre>
+          </fieldset>
+            </div>
+            <div class="tab-pane fade" id="pane-obs" role="tabpanel" aria-labelledby="tab-obs" tabindex="0">
+        <div id="overlay" aria-labelledby="overlayTitle">
+          <h2 class="h6 fw-bold" id="overlayTitle">Overlay para OBS</h2>
           <label class="form-label small" for="overlayUrl">Link com sua configuração atual</label>
           <div class="input-group input-group-sm mb-2">
             <input class="form-control" id="overlayUrl" readonly>
@@ -242,7 +251,10 @@
           <p class="small il-p1 fw-bold mb-2" id="overlayStale" role="status" hidden>Você mudou o controle depois de copiar o link. Copie de novo e cole na fonte do OBS: ela não se atualiza sozinha.</p>
           <p class="small text-muted mb-2">No OBS: <em>Fontes → + → Navegador</em>, cole o link, largura 720 e altura 560.</p>
           <div class="alert alert-warning small mb-0" role="note"><strong>Limitação conhecida:</strong> por segurança, navegadores (e o OBS 31+) só entregam inputs do controle para a janela em foco. Enquanto o jogo estiver em foco, o overlay pode parar de atualizar. Use-o para gravar tutoriais com o Lab em foco, ou veja as alternativas no README.</div>
-        </section>
+        </div>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   </div>
