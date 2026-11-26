@@ -107,6 +107,25 @@
     return { x: g.ox + col * g.step, y: g.oy + (g.offs[col] || 0) + row * g.dy };
   }
 
+  /**
+   * Posições das direções do leverless.
+   * "far": as posições padrão, afastadas dos botões de ação.
+   * "near": coladas nos botões de ação, como num Hitbox. São calculadas a partir
+   *   do primeiro botão de cima (LP no padrão), então acompanham qualquer layout.
+   */
+  function levDirs(cfg, mode) {
+    if (mode !== "near") return { left: { x: 82, y: 172 }, down: { x: 152, y: 152 }, right: { x: 222, y: 168 }, up: { x: 318, y: 276 } };
+    const btns = (cfg && cfg.leverless && cfg.leverless.buttons) || [];
+    const a = btns.find(function (b) { return b.id === "t0"; }) || gridPos("leverless", 0, 0);
+    const clampX = function (x) { return Math.max(60, x); }, clampY = function (y) { return Math.min(300, Math.max(70, y)); };
+    return {
+      left: { x: clampX(a.x - 230), y: clampY(a.y) },
+      down: { x: clampX(a.x - 148), y: clampY(a.y - 1) },
+      right: { x: clampX(a.x - 73), y: clampY(a.y + 36) },
+      up: { x: clampX(a.x - 67), y: clampY(a.y + 138) }
+    };
+  }
+
   function makeButtons(layout, preset) {
     const out = [];
     [["t", preset.top, TOP_PHYS, TOP_KEYS, 0], ["b", preset.bot, BOT_PHYS, BOT_KEYS, 1]].forEach(function (r) {
@@ -140,10 +159,10 @@
 
   function defaultConfig() {
     return applyPreset({
-      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8", buttonStyle: "outline", buttonFill: "#0B0D10", baseColor: null, baseColorPick: "#242836", trail: true, dirSource: "both", swapXY: false, swapAB: false, rsAxes: null, sysColor: SYS_COLOR, stickLayout2: true,
+      version: 2, layout: "stick", notation: "numpad", side: "p1", history: true, preset: "generic8", buttonStyle: "outline", buttonFill: "#0B0D10", baseColor: null, baseColorPick: "#242836", trail: true, dirSource: "both", swapXY: false, swapAB: false, rsAxes: null, sysColor: SYS_COLOR, stickLayout2: true, levDirsMode: "far", pockets: null,
       dirKeys: { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD" },
       stick: { buttons: [] },
-      leverless: { buttons: [], dirs: { left: { x: 82, y: 172 }, down: { x: 152, y: 152 }, right: { x: 222, y: 168 }, up: { x: 318, y: 276 } } },
+      leverless: { buttons: [], dirs: levDirs({}, "far") },
       pad: { style: "xbox", slots: [] }
     }, "generic8");
   }
@@ -154,7 +173,7 @@
     if (!c || c.version !== 2) return d;
     try {
       const out = JSON.parse(JSON.stringify(c));
-      ["notation", "side", "history", "layout", "preset", "buttonStyle", "buttonFill", "baseColor", "baseColorPick", "trail", "dirSource", "swapXY", "swapAB", "rsAxes", "sysColor"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
+      ["notation", "side", "history", "layout", "preset", "buttonStyle", "buttonFill", "baseColor", "baseColorPick", "trail", "dirSource", "swapXY", "swapAB", "rsAxes", "sysColor", "pockets"].forEach(function (k) { if (out[k] === undefined) out[k] = d[k]; });
       out.dirKeys = Object.assign({}, d.dirKeys, out.dirKeys || {});
       if (["stick", "leverless", "pad"].indexOf(out.layout) < 0) out.layout = "stick";
       out.stick = out.stick && Array.isArray(out.stick.buttons) ? out.stick : d.stick;
@@ -170,6 +189,8 @@
         });
         out.stickLayout2 = true;
       }
+      if (out.levDirsMode === undefined && out.leverless.dirs.left && out.leverless.dirs.left.x === 155) out.levDirsMode = "near";
+      if (out.levDirsMode !== "near") out.levDirsMode = "far";
       return out;
     } catch (e) { return d; }
   }
@@ -513,8 +534,11 @@
    * Os círculos são opacos dentro de um grupo semitransparente: assim, onde eles
    * se sobrepõem, a cor não escurece duas vezes.
    */
+  /** Rebaixo ligado? Escolha do usuário; sem escolha, só no estilo Clássico. */
+  function pocketsOn(cfg) { return cfg.pockets === true || (cfg.pockets == null && cfg.buttonStyle === "classic"); }
+
   function drawPockets(svg, list, cfg) {
-    if (cfg.buttonStyle !== "classic") return;
+    if (!pocketsOn(cfg)) return;
     // Filtro "goo": desfoca e endurece a borda de novo; círculos próximos viram uma
     // mancha só com junções arredondadas, como o rebaixo fresado de um Hitbox.
     const defs = el("defs", {}, svg);
@@ -910,7 +934,7 @@
     defaultConfig: defaultConfig, normalizeConfig: normalizeConfig, applyPreset: applyPreset,
     activeButtons: activeButtons, fromGallery: fromGallery, describeInput: describeInput,
     describeGp: describeGp, portableGp: portableGp, describeKey: describeKey, dirOfKey: dirOfKey,
-    contrast: contrast, labelColor: labelColor,
+    contrast: contrast, labelColor: labelColor, levDirs: levDirs, pocketsOn: pocketsOn,
     InputReader: InputReader, buildPad: buildPad, History: History
   };
 })();

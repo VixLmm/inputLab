@@ -80,6 +80,8 @@
     $("editModeBox").hidden = isPad;
     $("baseBox").hidden = isPad;
     $("trailBox").hidden = config.layout !== "stick";
+    $("pocketsBox").hidden = $("pocketsHelp").hidden = config.layout === "pad";
+    $("cfgPockets").checked = P.pocketsOn(config);
     $("buttonCount").textContent = buttons().filter(function (b) { return b.label !== ""; }).length;
   }
   function markSelectedRow() {
@@ -237,6 +239,16 @@
   }
 
   /* ---------- Teclado: direções e dica de teclas ---------- */
+  /* Leva as direções do leverless para perto ou para longe dos botões de ação,
+     mantendo a cor escolhida para cada uma. */
+  function placeLevDirs(mode) {
+    config.levDirsMode = mode;
+    const pos = P.levDirs(config, mode);
+    Object.keys(pos).forEach(function (d) {
+      config.leverless.dirs[d] = Object.assign(config.leverless.dirs[d] || {}, pos[d]);
+    });
+  }
+
   function renderDirKeys() {
     // No leverless, cada direção também ganha um seletor de cor, igual aos outros botões
     const lev = config.layout === "leverless";
@@ -249,6 +261,8 @@
         DIR_NAMES[d].split(" ")[0] + ' <span class="il-kbd">' + esc(P.describeKey(k)) + "</span></button></span>";
     }).join("");
     $("dirKeyTitle").textContent = lev ? "Direções: cor e tecla" : "Teclado: direções";
+    $("levDirsBox").hidden = !lev;
+    $("cfgLevDirs").value = config.levDirsMode || "far";
   }
   function updateKeyHint() {
     const box = $("keyHint"); if (!box) return;
@@ -343,7 +357,9 @@
     if (location.hash === "#overlay" && window.bootstrap) bootstrap.Tab.getOrCreateInstance($("tab-obs")).show();
     $("btnApplyPreset").addEventListener("click", function () {
       const key = $("cfgPreset").value;
-      P.applyPreset(config, key); selectedId = null; fullRefresh();
+      P.applyPreset(config, key);
+      if (config.levDirsMode === "near") placeLevDirs("near");   // direções acompanham o novo layout
+      selectedId = null; fullRefresh();
       announce("Preset " + P.GAME_PRESETS[key].name + " aplicado");
     });
     $("cfgNotation").addEventListener("change", function (e) { config.notation = e.target.value; persist(); });
@@ -353,7 +369,10 @@
     $("btnDetectRS").addEventListener("click", detectRightStick);
     $("cfgSide").addEventListener("change", function (e) { config.side = e.target.value; persist(); });
     $("cfgHistory").addEventListener("change", function (e) { config.history = e.target.checked; persist(); });
-    $("cfgButtonStyle").addEventListener("change", function (e) { config.buttonStyle = e.target.value; redrawPad(); updateFillBox(); persist(); });
+    $("cfgButtonStyle").addEventListener("change", function (e) {
+      config.buttonStyle = e.target.value; redrawPad(); updateFillBox(); persist();
+      $("cfgPockets").checked = P.pocketsOn(config);
+    });
     $("cfgButtonFill").addEventListener("input", function (e) { config.buttonFill = e.target.value; redrawPad(); persist(); });
     // Base do controle: transparente (padrão) ou numa cor escolhida
     $("cfgBaseTransparent").addEventListener("change", function (e) {
@@ -367,7 +386,12 @@
       redrawPad(); renderList(); renderSelectedEditor(); persist();
     });
     $("cfgTrail").addEventListener("change", function (e) { config.trail = e.target.checked; persist(); });
+    $("cfgPockets").addEventListener("change", function (e) { config.pockets = e.target.checked; redrawPad(); persist(); });
     $("cfgSysColor").addEventListener("input", function (e) { config.sysColor = e.target.value; redrawPad(); persist(); });
+    $("cfgLevDirs").addEventListener("change", function (e) {
+      placeLevDirs(e.target.value); redrawPad(); persist();
+      announce(e.target.value === "near" ? "Direções coladas nos botões" : "Direções afastadas");
+    });
     $("dirKeyList").addEventListener("input", function (e) {
       const d = e.target.getAttribute("data-dircolor"); if (!d) return;
       config.leverless.dirs[d].color = e.target.value;

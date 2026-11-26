@@ -165,6 +165,11 @@
             <input type="color" class="form-control form-control-color w-100" id="cfgSysColor" aria-describedby="sysColorHelp">
             <p class="form-text text-muted small mb-0" id="sysColorHelp">A cor que esses botões ganham quando são apertados, em todos os controles.</p>
           </div>
+          <div class="form-check form-switch mb-1" id="pocketsBox">
+            <input class="form-check-input" type="checkbox" role="switch" id="cfgPockets" aria-describedby="pocketsHelp">
+            <label class="form-check-label" for="cfgPockets">Rebaixo em volta dos botões</label>
+          </div>
+          <p class="form-text text-muted small mb-3" id="pocketsHelp">Uma área mais escura em volta dos botões, como o rebaixo da chapa de um Hitbox. Botões próximos ficam no mesmo rebaixo.</p>
           <div class="form-check form-switch mb-3" id="trailBox">
             <input class="form-check-input" type="checkbox" role="switch" id="cfgTrail">
             <label class="form-check-label" for="cfgTrail">Rastro do manche</label>
@@ -197,6 +202,14 @@
               <p class="small mt-2 mb-0" id="selContrast" aria-live="polite"></p>
             </div>
 
+            <div class="mt-3 mb-2" id="levDirsBox" hidden>
+              <label class="form-label fs-6 mb-1" for="cfgLevDirs">Posição das direções</label>
+              <select class="form-select form-select-sm" id="cfgLevDirs" aria-describedby="levDirsHelp">
+                <option value="far">Afastadas dos botões</option>
+                <option value="near">Coladas nos botões (estilo Hitbox)</option>
+              </select>
+              <p class="form-text text-muted small mb-0" id="levDirsHelp">Vale para qualquer preset: as direções acompanham o primeiro botão de ataque. Você ainda pode arrastá-las no modo edição.</p>
+            </div>
             <p class="form-label fs-6 mt-3 mb-1" id="dirKeyTitle">Teclado: direções</p>
             <div class="d-flex flex-wrap gap-1 mb-3" id="dirKeyList" role="group" aria-labelledby="dirKeyTitle"></div>
             <button class="btn btn-il-ghost btn-sm w-100" type="button" id="btnAddButton"><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar botão</button>
