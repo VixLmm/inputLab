@@ -479,9 +479,17 @@ h1, h2, h3, .h1, .h2, .h3, .h4, .h5, .h6, .il-display, .il-navbar .navbar-brand 
 .il-sec-sub { color: var(--il-muted); font-size: 1.1rem; max-width: 40rem; margin: 1rem 0 0; }
 
 /* Como funciona: passos ligados por uma linha */
-.il-steps { position: relative; list-style: none; padding: 0; margin: 3.5rem 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.75rem; }
-.il-step { min-width: 0; }
-.il-step h3 { font-family: var(--il-font-title); font-weight: 800; text-transform: uppercase; font-size: 2rem; margin: 1rem 0 .5rem; }
+/* Passos um embaixo do outro: texto à esquerda, print à direita (o print fica grande e legível) */
+.il-steps { list-style: none; padding: 0; margin: 3rem 0 0; border-bottom: 1px solid var(--il-border); }
+.il-step {
+  min-width: 0; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: 3rem; align-items: center; padding: 2.25rem 0; border-top: 1px solid var(--il-border);
+}
+.il-step > h3, .il-step > p { grid-column: 1; }
+.il-step > h3 { align-self: end; }
+.il-step > p { align-self: start; }
+.il-step > img { grid-column: 2; grid-row: 1 / span 2; justify-self: start; }
+.il-step h3 { font-family: var(--il-font-title); font-weight: 800; text-transform: uppercase; font-size: 2rem; margin: 0 0 .5rem; }
 .il-step p { color: var(--il-muted); margin-bottom: 1.1rem; }
 .il-step p strong { color: var(--il-text); }
 .il-snip { display: block; border: 1px solid var(--il-border); background: var(--il-surface); padding: .9rem 1rem; font-family: var(--il-font-mono); font-size: .85rem; color: var(--il-muted); }
@@ -560,7 +568,9 @@ html.il-reduce-motion .il-car .carousel-item { transition: none; }
   .il-arena-p2 { padding-left: var(--il-gutter); }
   .il-arena-badge { display: none; }
   .il-arena-ghost { font-size: 200px; }
-  .il-steps, .il-moves { grid-template-columns: minmax(0, 1fr); }
+  .il-moves { grid-template-columns: minmax(0, 1fr); }
+  .il-step { grid-template-columns: minmax(0, 1fr); }
+  .il-step > img { grid-column: 1; grid-row: auto; margin-top: .5rem; }
   .il-move + .il-move { padding-left: 0; border-left: 0; border-top: 1px solid var(--il-border); }
   .il-not { grid-template-columns: 1fr; gap: 2rem; }
   .il-car-slide { grid-template-columns: 1fr; gap: 1.25rem; padding: 1.25rem; }
@@ -604,3 +614,34 @@ html.il-reduce-motion .il-car .carousel-item { transition: none; }
 .il-tab-dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--il-p1); vertical-align: middle; margin-left: .2rem; }
 .il-tab-dot[hidden] { display: none; }
 html.il-reduce-motion .tab-pane.fade { transition: none; }
+
+/* =========================================================
+   23. Estilo "Clássico" dos botões (arcade e leverless)
+   Botões cinza com aro prateado em rebaixos escuros; ao apertar, ganham a cor do botão.
+   ========================================================= */
+.il-pad.classic .pockets circle { fill: #000; }
+.il-pad.classic .btn-ring { fill: #0E0F11; }
+.il-pad.classic .btn-shape { fill: #9C9DA1; stroke: #E6E7EA; stroke-width: 3.5; }
+.il-pad.classic .btn-gloss { fill: rgba(255, 255, 255, .08); stroke: rgba(0, 0, 0, .28); stroke-width: 1.5; }
+.il-pad.classic .btn-label:not(.sys-label) { fill: #1C1D20; }
+.il-pad.classic g.is-pressed .btn-shape { fill: var(--c); stroke: #FFFFFF; }
+.il-pad.classic g.is-pressed .btn-label { fill: var(--lc); }
+.il-pad.classic .dir-shape.pressed { fill: var(--il-p1) !important; }
+.il-pad.classic .dir-btn .btn-label { display: none; }
+
+/* =========================================================
+   24. Glossário: cartão sob o mouse (ou com foco do teclado) fica destacado
+   ========================================================= */
+.il-card.il-term { transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.il-card.il-term:hover, .il-card.il-term:focus-within {
+  border-color: var(--il-p2);
+  box-shadow: inset 4px 0 0 var(--il-p2), 0 8px 20px rgba(0, 0, 0, .22);
+  transform: translateY(-3px);
+}
+html.il-reduce-motion .il-card.il-term, html.il-reduce-motion .il-card.il-term:hover { transition: none; transform: none; }
+@media (prefers-reduced-motion: reduce) { .il-card.il-term, .il-card.il-term:hover { transition: none; transform: none; } }
+
+/* Direções do leverless com cor própria: o aro e o "aceso" usam a cor escolhida */
+.il-pad .dir-shape.dir-custom.pressed { fill: var(--c) !important; }
+.il-pad.outline .dir-shape.dir-custom { stroke: var(--c); }
+.il-dir-color { width: 2.2rem; height: 2rem; padding: .15rem; }

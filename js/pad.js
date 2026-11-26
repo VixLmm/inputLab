@@ -507,6 +507,37 @@
     return { g: g, shape: c };
   }
 
+  /**
+   * Estilo "Clássico": cada botão fica num rebaixo escuro da chapa, e os rebaixos
+   * vizinhos se juntam numa mancha só (como nos leverless tipo Hitbox).
+   * Os círculos são opacos dentro de um grupo semitransparente: assim, onde eles
+   * se sobrepõem, a cor não escurece duas vezes.
+   */
+  function drawPockets(svg, list, cfg) {
+    if (cfg.buttonStyle !== "classic") return;
+    // Filtro "goo": desfoca e endurece a borda de novo; círculos próximos viram uma
+    // mancha só com junções arredondadas, como o rebaixo fresado de um Hitbox.
+    const defs = el("defs", {}, svg);
+    const f = el("filter", { id: "il-goo", filterUnits: "userSpaceOnUse", x: 0, y: 0, width: 720, height: 360 }, defs);
+    el("feGaussianBlur", { in: "SourceGraphic", stdDeviation: 7 }, f);
+    el("feColorMatrix", { values: "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10" }, f);
+    const outer = el("g", { class: "pockets", opacity: 0.34 }, svg);
+    const g = el("g", { filter: "url(#il-goo)" }, outer);
+    const R = function (b) { return (b.r || 30) + 15; };
+    // Pontes: só entre vizinhos próximos (rebaixos a menos de 25 unidades),
+    // para eles ficarem colados sem encher o espaço entre os grupos.
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i], b = list[j];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d - R(a) - R(b) < 25) {
+          el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: "#000", "stroke-width": Math.min(R(a), R(b)) * 1.1, "stroke-linecap": "round" }, g);
+        }
+      }
+    }
+    list.forEach(function (b) { el("circle", { cx: b.x, cy: b.y, r: R(b) }, g); });
+  }
+
   /** Fileira SELECT · START · L3 · R3 no alto do arcade e do leverless. */
   function sysColor(cfg) { return /^#[0-9a-f]{6}$/i.test(cfg && cfg.sysColor) ? cfg.sysColor : SYS_COLOR; }
 
@@ -546,6 +577,7 @@
     el("stop", { offset: "100%", "stop-color": ballColor, "stop-opacity": 1 }, grad);
     const shaft = el("line", { x1: CX, y1: CY, x2: CX, y2: CY, class: "stick-shaft" }, svg);
     const ball = el("circle", { cx: CX, cy: CY, r: 36, fill: "url(#" + gid + ")", class: "stick-ball" }, svg);
+    drawPockets(svg, cfg.stick.buttons, cfg);
     cfg.stick.buttons.forEach(function (b) { refs.btn[b.id] = roundButton(svg, b, opts).shape; });
 
     let cx = CX, cy = CY;
@@ -578,11 +610,16 @@
   function drawLeverless(svg, cfg, refs, opts) {
     frame(svg, 24, cfg);
     const arrows = { left: "←", down: "↓", right: "→", up: "↑" };
+    drawPockets(svg, Object.keys(arrows).map(function (d) { return { x: cfg.leverless.dirs[d].x, y: cfg.leverless.dirs[d].y, r: 28 }; })
+      .concat(cfg.leverless.buttons), cfg);
     Object.keys(arrows).forEach(function (d) {
       const p = cfg.leverless.dirs[d];
-      const b = { id: "dir:" + d, x: p.x, y: p.y, r: 28, label: arrows[d], color: "#7A8296" };
+      // Cor própria opcional (aba Botões); sem ela, aro cinza e vermelho P1 ao apertar
+      const b = { id: "dir:" + d, x: p.x, y: p.y, r: 28, label: arrows[d], color: p.color || "#7A8296" };
       const r = roundButton(svg, b, opts);
       r.shape.classList.add("dir-shape");
+      if (p.color) r.shape.classList.add("dir-custom");
+      r.g.classList.add("dir-btn");                 // no estilo Clássico a seta some, como no Hitbox
       refs.dir[d] = r.shape;
     });
     drawSysRow(svg, refs, cfg);
@@ -792,7 +829,7 @@
     opts = opts || {};
     container.innerHTML = "";
     const names = { stick: "arcade stick", leverless: "controle leverless", pad: "controle " + (cfg.pad.style === "ps" ? "estilo PlayStation" : "estilo Xbox") };
-    const svg = el("svg", { viewBox: "0 0 720 360", class: "il-pad w-100" + (cfg.buttonStyle === "filled" ? "" : " outline"), style: "--il-btn-fill:" + (cfg.buttonFill || "#0B0D10") + ";--il-btn-label:" + labelColor(cfg.buttonFill || "#0B0D10"), role: "img", "aria-label": "Visualização do " + names[cfg.layout] });
+    const svg = el("svg", { viewBox: "0 0 720 360", class: "il-pad w-100" + (cfg.buttonStyle === "filled" ? "" : cfg.buttonStyle === "classic" ? " classic" : " outline"), style: "--il-btn-fill:" + (cfg.buttonFill || "#0B0D10") + ";--il-btn-label:" + labelColor(cfg.buttonFill || "#0B0D10"), role: "img", "aria-label": "Visualização do " + names[cfg.layout] });
     const refs = { btn: {}, dir: {}, sys: {} };
     let moveDirs = null;
     if (cfg.layout === "stick") moveDirs = drawStick(svg, cfg, refs, opts);

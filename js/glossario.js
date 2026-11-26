@@ -52,7 +52,7 @@
       return (cat === "todos" || x.c === cat) && (!q || norm(x.t + " " + x.d + " " + x.ex).indexOf(q) >= 0);
     });
     document.getElementById("results").innerHTML = results.map(function (x) {
-      return '<div class="col-md-6 col-lg-4"><article class="il-card h-100 p-4">' +
+      return '<div class="col-md-6 col-lg-4"><article class="il-card il-term h-100 p-4">' +
         '<div class="d-flex justify-content-between align-items-start mb-2 gap-2"><h3 class="h5 fw-bold mb-0">' + highlight(x.t, q) + '</h3>' +
         '<span class="il-badge il-p2">' + CATS[x.c] + "</span></div>" +
         '<p class="mb-2">' + highlight(x.d, q) + "</p>" +

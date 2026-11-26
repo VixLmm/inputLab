@@ -238,11 +238,17 @@
 
   /* ---------- Teclado: direções e dica de teclas ---------- */
   function renderDirKeys() {
+    // No leverless, cada direção também ganha um seletor de cor, igual aos outros botões
+    const lev = config.layout === "leverless";
     $("dirKeyList").innerHTML = ["up", "left", "down", "right"].map(function (d) {
       const k = config.dirKeys[d];
-      return '<button type="button" class="btn btn-il-ghost btn-sm" data-dir="' + d + '" aria-label="Tecla para ' + DIR_NAMES[d] + ': ' + esc(P.describeKey(k)) + '. Clique para remapear">' +
-        DIR_NAMES[d].split(" ")[0] + ' <span class="il-kbd">' + esc(P.describeKey(k)) + "</span></button>";
+      const dir = config.leverless.dirs[d] || {};
+      const color = lev ? '<input type="color" class="form-control form-control-color il-dir-color" data-dircolor="' + d + '" value="' + esc(dir.color || "#FF5A4E") + '" aria-label="Cor do botão ' + DIR_NAMES[d] + '">' : "";
+      return '<span class="d-inline-flex align-items-center gap-1">' + color +
+        '<button type="button" class="btn btn-il-ghost btn-sm" data-dir="' + d + '" aria-label="Tecla para ' + DIR_NAMES[d] + ': ' + esc(P.describeKey(k)) + '. Clique para remapear">' +
+        DIR_NAMES[d].split(" ")[0] + ' <span class="il-kbd">' + esc(P.describeKey(k)) + "</span></button></span>";
     }).join("");
+    $("dirKeyTitle").textContent = lev ? "Direções: cor e tecla" : "Teclado: direções";
   }
   function updateKeyHint() {
     const box = $("keyHint"); if (!box) return;
@@ -254,7 +260,7 @@
 
   /* ---------- Cor de fundo dos botões (só arcade/leverless no estilo contorno) ---------- */
   function updateFillBox() {
-    $("btnFillBox").hidden = config.layout === "pad" || config.buttonStyle === "filled";
+    $("btnFillBox").hidden = config.layout === "pad" || config.buttonStyle !== "outline";
   }
 
   /* ---------- Presets salvos na conta ---------- */
@@ -362,6 +368,11 @@
     });
     $("cfgTrail").addEventListener("change", function (e) { config.trail = e.target.checked; persist(); });
     $("cfgSysColor").addEventListener("input", function (e) { config.sysColor = e.target.value; redrawPad(); persist(); });
+    $("dirKeyList").addEventListener("input", function (e) {
+      const d = e.target.getAttribute("data-dircolor"); if (!d) return;
+      config.leverless.dirs[d].color = e.target.value;
+      redrawPad(); persist();
+    });
     $("dirKeyList").addEventListener("click", function (e) {
       const btn = e.target.closest("[data-dir]"); if (btn) startMapping("dir:" + btn.getAttribute("data-dir"), "key");
     });

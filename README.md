@@ -191,4 +191,4 @@ A `apiKey` não é uma senha: ela só identifica o projeto, e todo site com Fire
 
 ## 10. Uso de IA
 
-O projeto foi desenvolvido com apoio do Claude (Anthropic), de forma incremental, como orientado na disciplina: a IA ajudou a escrever e revisar partes do código e a testar a acessibilidade; as decisões de escopo, os testes com controles reais e a revisão de cada mudança foram meus. Detalhes na Parte D do relatório.
+O projeto foi desenvolvido com apoio do Claude (Anthropic), de forma incremental, como orientado na disciplina: a IA ajudou a escrever e revisar partes do código e a testar a acessibilidade; as decisões de escopo, os testes com controles reais e a revisão de cada mudança foram meus. A redação da Parte C.1 do relatório foi escrita por mim e avaliada com apoio de IA, que apontou erros de informação, de português e trechos pouco naturais. Detalhes na Parte D do relatório.
